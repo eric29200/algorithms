@@ -76,6 +76,45 @@ void sort_insertion(int *array, int nb_elements)
 }
 
 /*
+ * Heapify a subarray (at element i).
+ */
+static void heapify(int *array, int nb_elements, int i)
+{
+  int largest = i;
+  int left = i * 2 + 1;
+  int right = i * 2 + 2;
+
+  if (left < nb_elements && array[left] > array[largest])
+    largest = left;
+
+  if (right < nb_elements && array[right] > array[largest])
+    largest = right;
+
+  if (largest != i) {
+    swap(&array[i], &array[largest]);
+    heapify(array, nb_elements, largest);
+  }
+}
+
+/*
+ * Heap sort.
+ */
+void sort_heap(int *array, int nb_elements)
+{
+  int i;
+
+  /* "heapify" the array */
+  for (i = nb_elements / 2 - 1; i >= 0; i--)
+    heapify(array, nb_elements, i);
+
+  /* sort */
+  for (i = nb_elements - 1; i >= 0; i--) {
+    swap(&array[0], &array[i]);
+    heapify(array, i, 0);
+  }
+}
+
+/*
  * Sort an array.
  */
 void sort(int *array, int nb_elements, void (*sort_func)(int *, int), char *name)
@@ -113,6 +152,9 @@ int main()
 
   /* insertion sort */
   sort(array, NB_ELEMENTS, sort_insertion, "Insertion sort");
+
+  /* heap sort */
+  sort(array, NB_ELEMENTS, sort_heap, "Heap sort");
 
   return 0;
 }

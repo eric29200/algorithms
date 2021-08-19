@@ -21,7 +21,7 @@ void list_free(struct list_t *list)
  */
 struct list_t *list_append(struct list_t *list, void *data)
 {
-  struct list_t *new_list;
+  struct list_t *new_list, *last;
 
   /* allocate new element */
   new_list = (struct list_t *) malloc(sizeof(struct list_t));
@@ -33,10 +33,14 @@ struct list_t *list_append(struct list_t *list, void *data)
   new_list->next = NULL;
 
   /* append to the list */
-  if (list)
-    list_last(list)->next = new_list;
-  else
+  if (list) {
+    last = list_last(list);
+    last->next = new_list;
+    new_list->prev = last;
+  } else {
+    new_list->prev = NULL;
     list = new_list;
+  }
 
   return list;
 }
@@ -57,6 +61,15 @@ struct list_t *list_prepend(struct list_t *list, void *data)
   new_list->data = data;
   new_list->next = list;
 
+  if (list) {
+    new_list->prev = list->prev;
+    if (list->prev)
+      list->prev->next = new_list;
+    list->prev = new_list;
+  } else {
+    new_list->prev = NULL;
+  }
+
   return new_list;
 }
 
@@ -65,13 +78,17 @@ struct list_t *list_prepend(struct list_t *list, void *data)
  */
 struct list_t *list_concat(struct list_t *list1, struct list_t *list2)
 {
+  struct list_t *last;
+
   if (!list2)
     return list1;
 
-  if (list1) {
-    list_last(list1)->next = list2;
-    return list1;
-  }
+  last = list_last(list1);
+  if (last)
+    last->next = list2;
+  else
+    list1 = list2;
+  list2->prev = last;
 
   return list2;
 }
@@ -81,22 +98,27 @@ struct list_t *list_concat(struct list_t *list1, struct list_t *list2)
  */
 struct list_t *list_remove(struct list_t *list, void *data)
 {
-  struct list_t *prev = NULL, *tmp;
+  struct list_t *next, *tmp;
 
   tmp = list;
   while (tmp) {
-    if (tmp->data == data) {
-      if (prev)
-        prev->next = tmp->next;
+    if (tmp->data != data) {
+      tmp = tmp->next;
+    } else {
+      next = tmp->next;
+
+      if (tmp->prev)
+        tmp->prev->next = next;
       else
-        list = tmp->next;
+        list = next;
+
+      if (next)
+        next->prev = tmp->prev;
 
       free(tmp);
+      tmp = next;
       break;
     }
-
-    prev = tmp;
-    tmp = tmp->next;
   }
 
   return list;
@@ -107,28 +129,29 @@ struct list_t *list_remove(struct list_t *list, void *data)
  */
 struct list_t *list_remove_all(struct list_t *list, void *data)
 {
-  struct list_t *prev = NULL, *next, *tmp;
+  struct list_t *next, *tmp;
 
   tmp = list;
   while (tmp) {
-    if (tmp->data == data) {
+    if (tmp->data != data) {
+      tmp = tmp->next;
+    } else {
       next = tmp->next;
 
-      if (prev)
-        prev->next = next;
+      if (tmp->prev)
+        tmp->prev->next = next;
       else
         list = next;
 
+      if (next)
+        next->prev = tmp->prev;
+
       free(tmp);
       tmp = next;
-    } else {
-      prev = tmp;
-      tmp = tmp->next;
     }
   }
 
   return list;
-
 }
 
 /*
@@ -146,6 +169,7 @@ struct list_t *list_copy(struct list_t *list)
     }
 
     new_elt->data = list->data;
+    new_elt->prev = prev;
     if (prev)
       prev->next = new_elt;
     else
@@ -170,6 +194,20 @@ struct list_t *list_find(struct list_t *list, void *data)
   }
 
   return NULL;
+}
+
+/*
+ * Get the first element of a list.
+ */
+struct list_t *list_first(struct list_t *list)
+{
+  if (!list)
+    return NULL;
+
+  while (list->prev)
+    list = list->prev;
+
+  return list;
 }
 
 /*

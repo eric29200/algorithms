@@ -5,6 +5,7 @@
 
 struct list_t {
   void *data;
+  struct list_t *prev;
   struct list_t *next;
 };
 
@@ -16,6 +17,7 @@ struct list_t *list_remove(struct list_t *list, void *data);
 struct list_t *list_remove_all(struct list_t *list, void *data);
 struct list_t *list_copy(struct list_t *list);
 struct list_t *list_find(struct list_t *list, void *data);
+struct list_t *list_first(struct list_t *list);
 struct list_t *list_last(struct list_t *list);
 size_t list_length(struct list_t *list);
 

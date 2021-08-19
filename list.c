@@ -17,6 +17,21 @@ void list_free(struct list_t *list)
 }
 
 /*
+ * Free all elements of a list.
+ */
+void list_free_full(struct list_t *list, void (*free_func)(void *))
+{
+  struct list_t *next;
+
+  while (list) {
+    next = list->next;
+    free_func(list->data);
+    free(list);
+    list = next;
+  }
+}
+
+/*
  * Append an element at the end of a list.
  */
 struct list_t *list_append(struct list_t *list, void *data)

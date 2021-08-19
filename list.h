@@ -10,6 +10,7 @@ struct list_t {
 };
 
 void list_free(struct list_t *list);
+void list_free_full(struct list_t *list, void (*free_func)(void *));
 struct list_t *list_append(struct list_t *list, void *data);
 struct list_t *list_prepend(struct list_t *list, void *data);
 struct list_t *list_concat(struct list_t *list1, struct list_t *list2);

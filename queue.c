@@ -33,6 +33,18 @@ void queue_free(struct queue_t *queue)
 }
 
 /*
+ * Free a queue.
+ */
+void queue_free_full(struct queue_t *queue, void (*free_func)(void *))
+{
+  if (!queue)
+    return;
+
+  list_free_full(queue->head, free_func);
+  free(queue);
+}
+
+/*
  * Is queue empty ?.
  */
 int queue_is_empty(struct queue_t *queue)

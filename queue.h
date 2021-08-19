@@ -11,6 +11,7 @@ struct queue_t {
 
 struct queue_t *queue_create();
 void queue_free(struct queue_t *queue);
+void queue_free_full(struct queue_t *queue, void (*free_func)(void *));
 int queue_is_empty(struct queue_t *queue);
 struct queue_t *queue_copy(struct queue_t *queue);
 struct list_t *queue_find(struct queue_t *queue, void *data);

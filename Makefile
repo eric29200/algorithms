@@ -3,7 +3,7 @@ CC      := gcc
 
 all: sort
 
-sort: sort.o slist.o stack.o queue.o
+sort: sort.o list.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 .o: .c

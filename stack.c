@@ -46,7 +46,7 @@ void stack_free(struct stack_t *stack)
  */
 void *stack_pop(struct stack_t *stack)
 {
-  if (!stack_is_empty(stack))
+  if (stack && !stack_is_empty(stack))
     return stack->array[stack->top--];
 
   return NULL;
@@ -57,7 +57,7 @@ void *stack_pop(struct stack_t *stack)
  */
 void *stack_peek(struct stack_t *stack)
 {
-  if (!stack_is_empty(stack))
+  if (stack && !stack_is_empty(stack))
     return stack->array[stack->top];
 
   return NULL;
@@ -68,6 +68,6 @@ void *stack_peek(struct stack_t *stack)
  */
 void stack_push(struct stack_t *stack, void *data)
 {
-  if (!stack_is_full(stack))
+  if (stack && !stack_is_full(stack))
     stack->array[++stack->top] = data;
 }

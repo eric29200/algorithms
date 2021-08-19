@@ -265,32 +265,9 @@ static void list_swap(struct list_t *l1, struct list_t *l2)
 }
 
 /*
- * Sort a list (bubble sort).
- */
-void list_sort_bubble(struct list_t *list, int (*compare_func)(const void *, const void *))
-{
-  struct list_t *node;
-  int change = 1;
-
-  if (!list || !list->next)
-    return;
-
-  while (change) {
-    change = 0;
-
-    for (node = list->next; node != NULL; node = node->next) {
-      if (compare_func(node->data, node->prev->data) < 0) {
-        list_swap(node, node->prev);
-        change = 1;
-      }
-    }
-  }
-}
-
-/*
  * Sort a list (insertion sort).
  */
-void list_sort_insertion(struct list_t *list, int (*compare_func)(const void *, const void *))
+void list_sort(struct list_t *list, int (*compare_func)(const void *, const void *))
 {
   struct list_t *i, *j, *min;
 

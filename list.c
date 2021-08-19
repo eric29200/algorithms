@@ -90,7 +90,7 @@ struct list_t *list_concat(struct list_t *list1, struct list_t *list2)
     list1 = list2;
   list2->prev = last;
 
-  return list2;
+  return list1;
 }
 
 /*

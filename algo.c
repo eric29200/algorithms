@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "list.h"
+#include "heap.h"
 
-#define NB_ELEMENTS   50000
+#define NB_ELEMENTS   100
 
 /*
  * Integer comparison.
@@ -16,17 +16,30 @@ static inline int int_compare(const void *i1, const void *i2)
 
 int main()
 {
-  struct list_t *list = NULL;
-  int data[NB_ELEMENTS], i;
+  int data[NB_ELEMENTS];
+  struct heap_t *heap;
+  void *min;
+  size_t i;
 
-  /* create elements and list */
+  /* create a heap */
+  heap = heap_create(NB_ELEMENTS, int_compare);
+
+  /* create elements */
   for (i = 0; i < NB_ELEMENTS; i++) {
     data[i] = rand() % 100;
-    list = list_prepend(list, &data[i]);
+    heap_insert(heap, &data[i]);
   }
 
-  /* sort */
-  list = list_sort(list, int_compare);
+  while (1) {
+    min = heap_min(heap);
+    if (!min)
+      break;
+
+    printf("%d\n", *((int *) min));
+  }
+
+  /* free heap */
+  heap_free(heap);
 
   return 0;
 }

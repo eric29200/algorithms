@@ -1,0 +1,123 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "heap.h"
+
+/*
+ * Create a heap.
+ */
+struct heap_t *heap_create(size_t capacity, int (*compare_func)(const void *, const void *))
+{
+  struct heap_t *heap;
+
+  heap = (struct heap_t *) malloc(sizeof(struct heap_t));
+  if (!heap)
+    return NULL;
+
+  heap->capacity = capacity;
+  heap->size = 0;
+  heap->compare_func = compare_func;
+  heap->data = (void **) malloc(sizeof(void *) * capacity);
+  if (!heap->data) {
+    free(heap);
+    return NULL;
+  }
+
+  return heap;
+}
+
+/*
+ * Free a heap.
+ */
+void heap_free(struct heap_t *heap)
+{
+  if (heap) {
+    if (heap->data)
+      free(heap->data);
+
+    free(heap);
+  }
+}
+
+/*
+ * Swap 2 elements of a heap.
+ */
+static void __heap_swap(struct heap_t *heap, int i, int j)
+{
+  void *tmp = heap->data[i];
+  heap->data[i] = heap->data[j];
+  heap->data[j] = tmp;
+}
+
+/*
+ * Min heapify at index i.
+ */
+static void __min_heapify(struct heap_t *heap, int i)
+{
+  int smallest, left, right;
+
+  if (i < 0)
+    return;
+
+  /* get left/right nodes */
+  smallest = i;
+  left = heap_left(i);
+  right = heap_right(i);
+
+  /* get smallest data from parent, left, right */
+  if (left < heap->size && heap->compare_func(heap->data[left], heap->data[smallest]) < 0)
+    smallest = left;
+  if (right < heap->size && heap->compare_func(heap->data[right], heap->data[smallest]) < 0)
+    smallest = right;
+
+  /* put smallest at parent index and recursive heapify */
+  if (smallest != i) {
+    __heap_swap(heap, i, smallest);
+    __min_heapify(heap, smallest);
+  }
+}
+
+/*
+ * Insert data into a heap.
+ */
+void heap_insert(struct heap_t *heap, void *data)
+{
+  int i;
+
+  /* heap overflow */
+  if (heap_is_full(heap))
+    return;
+
+  /* add data */
+  heap->data[heap->size++] = data;
+
+  /* fix new data position (must be greater than its parent if min heap) */
+  for (i = heap->size - 1; i > 0 && heap->compare_func(heap->data[heap_parent(i)], heap->data[i]) > 0; i = heap_parent(i))
+    __heap_swap(heap, i, heap_parent(i));
+}
+
+/*
+ * Get minimum value from heap.
+ */
+void *heap_min(struct heap_t *heap)
+{
+  void *root;
+
+  if (heap->size <= 0)
+    return NULL;
+
+  if (heap->size == 1) {
+    heap->size--;
+    return heap->data[0];
+  }
+
+  /* extract root = minimum element */
+  root = heap->data[0];
+  heap->data[0] = heap->data[heap->size - 1];
+  heap->size--;
+
+  /* reheapify from root */
+  __min_heapify(heap, 0); 
+
+  return root;
+}

@@ -26,7 +26,7 @@ int main()
   }
 
   /* sort */
-  list_sort(&list, int_compare);
+  list = list_sort(list, int_compare);
 
   return 0;
 }

@@ -282,15 +282,15 @@ static struct list_t *__list_sort_merge(struct list_t *l1, struct list_t *l2, in
 /*
  * Sort a list (merge sort).
  */
-void list_sort(struct list_t **list, int (*compare_func)(const void *, const void *))
+struct list_t *list_sort(struct list_t *list, int (*compare_func)(const void *, const void *))
 {
   struct list_t *l1, *l2;
 
-  if (!*list || !(*list)->next)
-    return;
+  if (!list || !list->next)
+    return list;
 
   /* split the list in 2 (l2 moves forward 2 times faster than l1) */
-  for (l1 = *list, l2 = (*list)->next; l2 != NULL;) {
+  for (l1 = list, l2 = list->next; l2 != NULL;) {
     l2 = l2->next;
     if (l2) {
         l1 = l1->next;
@@ -301,12 +301,12 @@ void list_sort(struct list_t **list, int (*compare_func)(const void *, const voi
   /* l1 is just before the middle element */
   l2 = l1->next;
   l1->next = NULL;
-  l1 = *list;
+  l1 = list;
 
-  /* */
-  list_sort(&l1, compare_func);
-  list_sort(&l2, compare_func);
+  /* recursive merge sort */
+  l1 = list_sort(l1, compare_func);
+  l2 = list_sort(l2, compare_func);
 
   /* merge sorted lists */
-  *list = __list_sort_merge(l1, l2, compare_func);
+  return __list_sort_merge(l1, l2, compare_func);
 }

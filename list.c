@@ -255,33 +255,58 @@ size_t list_length(struct list_t *list)
 }
 
 /*
- * Swap 2 elements of a list.
+ * Merge 2 sorted lists.
  */
-static void list_swap(struct list_t *l1, struct list_t *l2)
+static struct list_t *__list_sort_merge(struct list_t *l1, struct list_t *l2, int (*compare_func)(const void *, const void *))
 {
-  void *tmp = l1->data;
-  l1->data = l2->data;
-  l2->data = tmp;
+  struct list_t *res;
+  int cmp;
+
+  if (!l1)
+    return l2;
+  if (!l2)
+    return l1;
+
+  cmp = compare_func(l1->data, l2->data);
+  if (cmp <= 0) {
+    res = l1;
+    res->next = __list_sort_merge(l1->next, l2, compare_func);
+  } else {
+    res = l2;
+    res->next = __list_sort_merge(l1, l2->next, compare_func);
+  }
+
+  return res;
 }
 
 /*
- * Sort a list (insertion sort).
+ * Sort a list (merge sort).
  */
-void list_sort(struct list_t *list, int (*compare_func)(const void *, const void *))
+void list_sort(struct list_t **list, int (*compare_func)(const void *, const void *))
 {
-  struct list_t *i, *j, *min;
+  struct list_t *l1, *l2;
 
-  if (!list || !list->next)
+  if (!*list || !(*list)->next)
     return;
 
-  for (i = list; i != NULL; i = i->next) {
-    min = i;
-
-    for (j = i->next; j != NULL; j = j->next)
-      if (compare_func(j->data, min->data) < 0)
-        min = j;
-
-    if (min != i)
-      list_swap(i, min);
+  /* split the list in 2 (l2 moves forward 2 times faster than l1) */
+  for (l1 = *list, l2 = (*list)->next; l2 != NULL;) {
+    l2 = l2->next;
+    if (l2) {
+        l1 = l1->next;
+        l2 = l2->next;
+      }
   }
+
+  /* l1 is just before the middle element */
+  l2 = l1->next;
+  l1->next = NULL;
+  l1 = *list;
+
+  /* */
+  list_sort(&l1, compare_func);
+  list_sort(&l2, compare_func);
+
+  /* merge sorted lists */
+  *list = __list_sort_merge(l1, l2, compare_func);
 }

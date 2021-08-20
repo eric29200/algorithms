@@ -4,7 +4,7 @@
 
 #include "list.h"
 
-#define NB_ELEMENTS   10000
+#define NB_ELEMENTS   50000
 
 /*
  * Integer comparison.
@@ -26,7 +26,7 @@ int main()
   }
 
   /* sort */
-  list_sort(list, int_compare);
+  list_sort(&list, int_compare);
 
   return 0;
 }

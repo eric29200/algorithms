@@ -138,7 +138,7 @@ void huffman_encode(const char *s)
   memset(freq, 0, sizeof(int) * NB_CHARACTERS);
 
   /* create a heap */
-  heap = heap_create(HEAP_MIN, NB_CHARACTERS, huff_node_compare);
+  heap = heap_create(HEAP_MIN, NB_CHARACTERS * 2, huff_node_compare);
   if (!heap)
     return;
 

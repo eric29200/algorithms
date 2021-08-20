@@ -45,6 +45,26 @@ void heap_free(struct heap_t *heap)
 }
 
 /*
+ * Free a heap.
+ */
+void heap_free_full(struct heap_t *heap, void (*free_func)(void *))
+{
+  size_t i;
+
+  if (heap) {
+    if (heap->data) {
+      for (i = 0; i < heap->capacity; i++)
+        if (heap->data[i])
+          free_func(heap->data[i]);
+
+      free(heap->data);
+    }
+
+    free(heap);
+  }
+}
+
+/*
  * Swap 2 elements of a heap.
  */
 static void __heap_swap(struct heap_t *heap, int i, int j)

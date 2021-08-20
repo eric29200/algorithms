@@ -18,6 +18,7 @@ struct heap_t {
 
 struct heap_t *heap_create(int type, size_t capacity, int (*compare_func)(const void *, const void *));
 void heap_free(struct heap_t *heap);
+void heap_free_full(struct heap_t *heap, void (*free_func)(void *));
 void heap_insert(struct heap_t *heap, void *data);
 void *heap_min(struct heap_t *heap);
 void *heap_max(struct heap_t *heap);

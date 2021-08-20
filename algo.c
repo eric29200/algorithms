@@ -18,11 +18,11 @@ int main()
 {
   int data[NB_ELEMENTS];
   struct heap_t *heap;
-  void *min;
+  void *max;
   size_t i;
 
   /* create a heap */
-  heap = heap_create(NB_ELEMENTS, int_compare);
+  heap = heap_create(HEAP_MAX, NB_ELEMENTS, int_compare);
 
   /* create elements */
   for (i = 0; i < NB_ELEMENTS; i++) {
@@ -31,11 +31,11 @@ int main()
   }
 
   while (1) {
-    min = heap_min(heap);
-    if (!min)
+    max = heap_max(heap);
+    if (!max)
       break;
 
-    printf("%d\n", *((int *) min));
+    printf("%d\n", *((int *) max));
   }
 
   /* free heap */

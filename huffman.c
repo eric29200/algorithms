@@ -50,10 +50,33 @@ static struct huff_node_t *huff_node_create(char item, int freq)
 /*
  * Build huffman tree.
  */
-static struct huff_node_t *huffman_tree(struct heap_t *heap)
+static struct huff_node_t *huffman_tree(int freq[], size_t nb_characters)
 {
-  struct huff_node_t *left, *right, *top;
+  struct huff_node_t *left, *right, *top, *node;
+  struct heap_t *heap;
+  size_t i;
 
+  /* create a heap */
+  heap = heap_create(HEAP_MIN, NB_CHARACTERS * 2, huff_node_compare);
+  if (!heap)
+    return NULL;
+
+  /* build min heap */
+  for (i = 0; i < NB_CHARACTERS; i++) {
+    if (freq[i]) {
+      /* create node */
+      node = huff_node_create(i, freq[i]);
+      if (!node) {
+        heap_free(heap);
+        return NULL;
+      }
+
+      /* insert node */
+      heap_insert(heap, node);
+    }
+  }
+
+  /* build huffman tree */
   while (heap->size > 1) {
     /* extract 2 minimum values */
     left = heap_min(heap);
@@ -74,42 +97,22 @@ static struct huff_node_t *huffman_tree(struct heap_t *heap)
 }
 
 /*
- * Free a huffman tree.
- */
-static void huffman_tree_free(struct huff_node_t *node)
-{
-  struct huff_node_t *left, *right;
-
-  if (!node)
-    return;
-
-  /* free root */
-  left = node->left;
-  right = node->right;
-  free(node);
-
-  /* free children */
-  huffman_tree_free(left);
-  huffman_tree_free(right);
-}
-
-/*
  * Build huffman codes.
  */
-static void huffman_codes(struct huff_node_t *root, int code[], int top)
+static void huffman_tree_build_codes(struct huff_node_t *root, int code[], int top)
 {
-  size_t i;
+  int i;
 
   /* build huffman code on left (encode with a zero) */
   if (root->left) {
     code[top] = 0;
-    huffman_codes(root->left, code, top + 1);
+    huffman_tree_build_codes(root->left, code, top + 1);
   }
 
   /* build huffman code on right (encode with a one) */
   if (root->right) {
     code[top] = 1;
-    huffman_codes(root->right, code, top + 1);
+    huffman_tree_build_codes(root->right, code, top + 1);
   }
 
   /* leaf : create code */
@@ -120,53 +123,78 @@ static void huffman_codes(struct huff_node_t *root, int code[], int top)
 }
 
 /*
+ * Extract huffman nodes from a tree.
+ */
+static void huffman_tree_extract_nodes(struct huff_node_t *root, struct huff_node_t **nodes)
+{
+  if (!root)
+    return;
+
+  if (root->left)
+    huffman_tree_extract_nodes(root->left, nodes);
+
+  if (root->right)
+    huffman_tree_extract_nodes(root->right, nodes);
+
+  if (huffman_leaf(root))
+    nodes[(int) root->item] = root;
+}
+
+/*
+ * Free a huffman tree.
+ */
+static void huffman_tree_free(struct huff_node_t *root)
+{
+  struct huff_node_t *left, *right;
+
+  if (!root)
+    return;
+
+  /* free root */
+  left = root->left;
+  right = root->right;
+  free(root);
+
+  /* free children */
+  huffman_tree_free(left);
+  huffman_tree_free(right);
+}
+
+/*
  * Huffman encoding of a string.
  */
 void huffman_encode(const char *s)
 {
+  struct huff_node_t *root, *nodes[NB_CHARACTERS];
   int freq[NB_CHARACTERS], code[NB_CHARACTERS];
-  struct huff_node_t *node, *root = NULL;
-  struct heap_t *heap;
   size_t i;
 
   /* handle null string */
   if (!s)
     return;
 
-  /* memzero frequencies */
-  memset(freq, 0, sizeof(int) * NB_CHARACTERS);
-
-  /* create a heap */
-  heap = heap_create(HEAP_MIN, NB_CHARACTERS * 2, huff_node_compare);
-  if (!heap)
-    return;
-
   /* compute frequencies */
+  memset(freq, 0, sizeof(int) * NB_CHARACTERS);
   while (*s)
     freq[(int) *s++]++;
 
-  /* build min heap */
-  for (i = 0; i < NB_CHARACTERS; i++) {
-    if (freq[i]) {
-      /* create node */
-      node = huff_node_create(i, freq[i]);
-      if (!node)
-        goto out;
-
-      /* insert node */
-      heap_insert(heap, node);
-    }
-  }
-
   /* build huffman tree */
-  root = huffman_tree(heap);
+  root = huffman_tree(freq, NB_CHARACTERS);
+  if (!root)
+    return;
 
   /* build huffman codes */
-  huffman_codes(root, code, 0);
+  huffman_tree_build_codes(root, code, 0);
 
-out:
-  if (root)
-    huffman_tree_free(root);
-  else
-    heap_free_full(heap, free);
+  /* extract nodes from tree */
+  for (i = 0; i < NB_CHARACTERS; i++)
+    nodes[i] = NULL;
+  huffman_tree_extract_nodes(root, nodes);
+
+  /* TODO : write header */
+
+  /* TODO : write codes */
+
+  /* free huffman tree */
+  huffman_tree_free(root);
 }

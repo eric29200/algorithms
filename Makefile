@@ -1,4 +1,4 @@
-CFLAGS  := -Wall -O3
+CFLAGS  := -Wall
 CC      := gcc
 
 all: algo

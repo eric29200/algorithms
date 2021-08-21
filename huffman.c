@@ -4,7 +4,7 @@
 
 #include "heap.h"
 
-#define NB_CHARACTERS       256
+#define NB_CHARACTERS             256
 
 #define huffman_leaf(node)        ((node)->left == NULL && (node)->right == NULL)
 
@@ -14,6 +14,7 @@
 struct huff_node_t {
   char item;
   int freq;
+  int huff_code[NB_CHARACTERS / 8];
   struct huff_node_t *left;
   struct huff_node_t *right;
 };
@@ -41,6 +42,7 @@ static struct huff_node_t *huff_node_create(char item, int freq)
   node->freq = freq;
   node->left = NULL;
   node->right = NULL;
+  memset(node->huff_code, 0, sizeof(node->huff_code));
 
   return node;
 }
@@ -110,14 +112,11 @@ static void huffman_codes(struct huff_node_t *root, int code[], int top)
     huffman_codes(root->right, code, top + 1);
   }
 
-  /* leaf : print code */
-  if (huffman_leaf(root)) {
-    printf(" %c | ", root->item);
-
+  /* leaf : create code */
+  if (huffman_leaf(root))
     for (i = 0; i < top; i++)
-      printf("%d", code[i]);
-    printf("\n");
-  }
+      if (code[i])
+        root->huff_code[(top - i - 1) / 8] |= 1 << ((top - i - 1) % 8);
 }
 
 /*

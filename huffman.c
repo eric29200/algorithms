@@ -163,7 +163,7 @@ static void huffman_tree_free(struct huff_node_t *root)
  */
 static void huffman_compute_frequencies(FILE *fp, int *freq, size_t nb_characters)
 {
-  char buf[BUF_SIZE];
+  unsigned char buf[BUF_SIZE];
   size_t len, i;
 
   /* reset frequences */

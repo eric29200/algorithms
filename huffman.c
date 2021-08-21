@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "heap.h"
 
 #define NB_CHARACTERS             256
+#define BUF_SIZE                  1024
 
 #define huffman_leaf(node)        ((node)->left == NULL && (node)->right == NULL)
 
@@ -161,27 +163,78 @@ static void huffman_tree_free(struct huff_node_t *root)
 }
 
 /*
+ * Compute frequencies.
+ */
+static void huffman_compute_frequencies(FILE *fp, int *freq, size_t nb_characters)
+{
+  char buf[BUF_SIZE];
+  size_t len, i;
+
+  /* reset frequences */
+  for (i = 0; i < nb_characters; i++)
+    freq[i] = 0;
+
+  /* read all file */
+  while (1) {
+    len = fread(buf, 1, BUF_SIZE, fp);
+    if (len <= 0)
+      return;
+
+    /* compute buffer */
+    for (i = 0; i < len; i++)
+      freq[(int) buf[i]]++;
+  }
+}
+
+/*
+ * Write huffman header.
+ */
+static void huffman_write_header(FILE *fp, struct huff_node_t **nodes, size_t nb_nodes)
+{
+  size_t i;
+
+  for (i = 0; i < nb_nodes; i++) {
+    if (nodes[i]) {
+      fwrite(&nodes[i]->item, sizeof(char), 1, fp);
+      fwrite(&nodes[i]->freq, sizeof(int), 1, fp);
+    }
+  }
+}
+
+/*
  * Huffman encoding of a string.
  */
-void huffman_encode(const char *s)
+int huffman_encode(const char *input_file, const char *output_file)
 {
   struct huff_node_t *root, *nodes[NB_CHARACTERS];
   int freq[NB_CHARACTERS], code[NB_CHARACTERS];
+  FILE *fp_input, *fp_output;
   size_t i;
+  int ret;
 
-  /* handle null string */
-  if (!s)
-    return;
+  /* open input file */
+  fp_input = fopen(input_file, "r");
+  if (!fp_input)
+    return errno;
+
+  /* open output file */
+  fp_output = fopen(output_file, "w");
+  if (!fp_output) {
+    ret = errno;
+    fclose(fp_input);
+    return ret;
+  }
 
   /* compute frequencies */
-  memset(freq, 0, sizeof(int) * NB_CHARACTERS);
-  while (*s)
-    freq[(int) *s++]++;
+  huffman_compute_frequencies(fp_input, freq, NB_CHARACTERS);
 
   /* build huffman tree */
   root = huffman_tree(freq, NB_CHARACTERS);
-  if (!root)
-    return;
+  if (!root) {
+    return -1;
+    fclose(fp_input);
+    fclose(fp_output);
+  }
 
   /* build huffman codes */
   huffman_tree_build_codes(root, code, 0);
@@ -191,10 +244,17 @@ void huffman_encode(const char *s)
     nodes[i] = NULL;
   huffman_tree_extract_nodes(root, nodes);
 
-  /* TODO : write header */
+  /*  write header */
+  huffman_write_header(fp_output, nodes, NB_CHARACTERS);
 
   /* TODO : write codes */
 
   /* free huffman tree */
   huffman_tree_free(root);
+
+  /* close files */
+  fclose(fp_input);
+  fclose(fp_output);
+
+  return 0;
 }

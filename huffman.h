@@ -1,6 +1,6 @@
 #ifndef _HUFFMAN_H_
 #define _HUFFMAN_H_
 
-void huffman_encode(const char *s);
+int huffman_encode(const char *input_file, const char *output_file);
 
 #endif

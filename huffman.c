@@ -16,7 +16,7 @@
 struct huff_node_t {
   char item;
   int freq;
-  int huff_code[NB_CHARACTERS / 8];
+  char huff_code[NB_CHARACTERS / 8];
   struct huff_node_t *left;
   struct huff_node_t *right;
 };
@@ -101,27 +101,23 @@ static struct huff_node_t *huffman_tree(int freq[], size_t nb_characters)
 /*
  * Build huffman codes.
  */
-static void huffman_tree_build_codes(struct huff_node_t *root, int code[], int top)
+static void huffman_tree_build_codes(struct huff_node_t *root, char code[], int top)
 {
-  int i;
-
   /* build huffman code on left (encode with a zero) */
   if (root->left) {
-    code[top] = 0;
+    code[top] = '0';
     huffman_tree_build_codes(root->left, code, top + 1);
   }
 
   /* build huffman code on right (encode with a one) */
   if (root->right) {
-    code[top] = 1;
+    code[top] = '1';
     huffman_tree_build_codes(root->right, code, top + 1);
   }
 
   /* leaf : create code */
   if (huffman_leaf(root))
-    for (i = 0; i < top; i++)
-      if (code[i])
-        root->huff_code[(top - i - 1) / 8] |= 1 << ((top - i - 1) % 8);
+    strncpy(root->huff_code, code, top);
 }
 
 /*
@@ -207,10 +203,10 @@ static void huffman_write_header(FILE *fp, struct huff_node_t **nodes, size_t nb
 int huffman_encode(const char *input_file, const char *output_file)
 {
   struct huff_node_t *root, *nodes[NB_CHARACTERS];
-  int freq[NB_CHARACTERS], code[NB_CHARACTERS];
+  int freq[NB_CHARACTERS], ret;
   FILE *fp_input, *fp_output;
+  char code[NB_CHARACTERS];
   size_t i;
-  int ret;
 
   /* open input file */
   fp_input = fopen(input_file, "r");

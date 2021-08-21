@@ -302,6 +302,55 @@ static void huffman_write_content(FILE *fp_input, FILE *fp_output, struct huff_n
 }
 
 /*
+ * Decode huffman file content.
+ */
+static void huffman_read_content(FILE *fp_input, FILE *fp_output, struct huff_node_t *root)
+{
+  unsigned char buf_input[BUF_SIZE];
+  unsigned char buf_output[BUF_SIZE];
+  struct huff_node_t *node;
+  size_t len, i, j, k;
+  int v;
+
+  for (node = root, k = 0;;) {
+    /* read input file */
+    len = fread(buf_input, 1, BUF_SIZE, fp_input);
+    if (len <= 0)
+      break;
+
+    /* decode each character */
+    for (i = 0; i < len; i++) {
+      /* extract each bit */
+      for (j = 0; j < 8; j++) {
+        v = (buf_input[i] >> (8 - j - 1)) & 1;
+
+        /* walk through the tree */
+        if (v)
+          node = node->right;
+        else
+          node = node->left;
+
+        /* leaf : store code */
+        if (huffman_leaf(node)) {
+          buf_output[k++] = node->item;
+          node = root;
+
+          /* output buffer full : write it */
+          if (k >= BUF_SIZE) {
+            fwrite(buf_output, 1, k, fp_output);
+            k = 0;
+          }
+        }
+      }
+    }
+  }
+
+  /* write last buffer */
+  if (k > 0)
+    fwrite(buf_output, 1, k, fp_output);
+}
+
+/*
  * Huffman encoding of a file.
  */
 int huffman_encode(const char *input_file, const char *output_file)
@@ -393,6 +442,9 @@ int huffman_decode(const char *input_file, const char *output_file)
     fclose(fp_input);
     fclose(fp_output);
   }
+
+  /* decode file's content */
+  huffman_read_content(fp_input, fp_output, root);
 
   /* free huffman tree */
   huffman_tree_free(root);

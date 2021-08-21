@@ -235,8 +235,8 @@ static void huffman_read_header(FILE *fp, int *freq, size_t nb_characters)
  */
 static void huffman_write_buffer(FILE *fp, char *buf, size_t len)
 {
+  unsigned char c;
   size_t i, j, n;
-  char c;
 
   if (len <= 0)
     return;
@@ -251,7 +251,8 @@ static void huffman_write_buffer(FILE *fp, char *buf, size_t len)
 
     /* convert string huffman code to binary */
     for (j = 0; j < n; j++)
-      c |= buf[i + j] << j;
+      if (buf[i + j] == '1')
+        c |= 1 << (8 - j - 1);
 
     /* write binary buffer */
     fwrite(&c, sizeof(char), 1, fp);

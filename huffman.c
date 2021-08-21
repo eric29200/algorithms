@@ -52,7 +52,7 @@ static struct huff_node_t *huff_node_create(unsigned char item, int freq)
 /*
  * Build huffman tree.
  */
-static struct huff_node_t *huffman_tree(int freq[], size_t nb_characters)
+static struct huff_node_t *huffman_tree(int *freq, size_t nb_characters)
 {
   struct huff_node_t *left, *right, *top, *node;
   struct heap_t *heap;
@@ -101,7 +101,7 @@ static struct huff_node_t *huffman_tree(int freq[], size_t nb_characters)
 /*
  * Build huffman codes.
  */
-static void huffman_tree_build_codes(struct huff_node_t *root, char code[], int top)
+static void huffman_tree_build_codes(struct huff_node_t *root, char *code, int top)
 {
   /* build huffman code on left (encode with a zero) */
   if (root->left) {
@@ -167,8 +167,7 @@ static void huffman_compute_frequencies(FILE *fp, int *freq, size_t nb_character
   size_t len, i;
 
   /* reset frequencies */
-  for (i = 0; i < nb_characters; i++)
-    freq[i] = 0;
+  memset(freq, 0, sizeof(int) * nb_characters);
 
   /* read all file */
   while (1) {
@@ -203,6 +202,31 @@ static void huffman_write_header(FILE *fp, struct huff_node_t **nodes, size_t nb
       fwrite(&nodes[i]->item, sizeof(char), 1, fp);
       fwrite(&nodes[i]->freq, sizeof(int), 1, fp);
     }
+  }
+}
+
+/*
+ * Read huffman header.
+ */
+static void huffman_read_header(FILE *fp, int *freq, size_t nb_characters)
+{
+  int nb_nodes, i, f;
+  unsigned char c;
+
+  /* reset frequencies */
+  memset(freq, 0, sizeof(int) * nb_characters);
+
+  /* read number of nodes */
+  fread(&nb_nodes, sizeof(int), 1, fp);
+
+  /* read header */
+  for (i = 0; i < nb_nodes; i++) {
+    /* read item and its frequency */
+    fread(&c, sizeof(char), 1, fp);
+    fread(&f, sizeof(int), 1, fp);
+
+    /* store frequency */
+    freq[c] = f;
   }
 }
 
@@ -277,7 +301,7 @@ static void huffman_write_content(FILE *fp_input, FILE *fp_output, struct huff_n
 }
 
 /*
- * Huffman encoding of a string.
+ * Huffman encoding of a file.
  */
 int huffman_encode(const char *input_file, const char *output_file)
 {
@@ -324,6 +348,50 @@ int huffman_encode(const char *input_file, const char *output_file)
 
   /* write codes */
   huffman_write_content(fp_input, fp_output, nodes);
+
+  /* free huffman tree */
+  huffman_tree_free(root);
+
+  /* close files */
+  fclose(fp_input);
+  fclose(fp_output);
+
+  return 0;
+}
+
+/*
+ * Huffman decoding of a file.
+ */
+int huffman_decode(const char *input_file, const char *output_file)
+{
+  FILE *fp_input, *fp_output;
+  struct huff_node_t *root;
+  int freq[NB_CHARACTERS];
+  int ret;
+
+  /* open input file */
+  fp_input = fopen(input_file, "r");
+  if (!fp_input)
+    return errno;
+
+  /* open output file */
+  fp_output = fopen(output_file, "w");
+  if (!fp_output) {
+    ret = errno;
+    fclose(fp_input);
+    return ret;
+  }
+
+  /* read header */
+  huffman_read_header(fp_input, freq, NB_CHARACTERS);
+
+  /* build huffman tree */
+  root = huffman_tree(freq, NB_CHARACTERS);
+  if (!root) {
+    return -1;
+    fclose(fp_input);
+    fclose(fp_output);
+  }
 
   /* free huffman tree */
   huffman_tree_free(root);

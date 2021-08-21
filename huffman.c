@@ -187,8 +187,17 @@ static void huffman_compute_frequencies(FILE *fp, int *freq, size_t nb_character
  */
 static void huffman_write_header(FILE *fp, struct huff_node_t **nodes, size_t nb_nodes)
 {
-  size_t i;
+  size_t i, n;
 
+  /* compute number of nodes */
+  for (i = 0, n = 0; i < nb_nodes; i++)
+    if (nodes[i])
+      n++;
+
+  /* write number of nodes */
+  fwrite(&n, sizeof(int), 1, fp);
+
+  /* write dictionnary */
   for (i = 0; i < nb_nodes; i++) {
     if (nodes[i]) {
       fwrite(&nodes[i]->item, sizeof(char), 1, fp);

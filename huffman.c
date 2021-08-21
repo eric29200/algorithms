@@ -14,7 +14,7 @@
  * Huffman node.
  */
 struct huff_node_t {
-  char item;
+  unsigned char item;
   int freq;
   char huff_code[NB_CHARACTERS / 8];
   struct huff_node_t *left;
@@ -32,7 +32,7 @@ static int huff_node_compare(const void *h1, const void *h2)
 /*
  * Create a new huffman node.
  */
-static struct huff_node_t *huff_node_create(char item, int freq)
+static struct huff_node_t *huff_node_create(unsigned char item, int freq)
 {
   struct huff_node_t *node;
 
@@ -166,7 +166,7 @@ static void huffman_compute_frequencies(FILE *fp, int *freq, size_t nb_character
   unsigned char buf[BUF_SIZE];
   size_t len, i;
 
-  /* reset frequences */
+  /* reset frequencies */
   for (i = 0; i < nb_characters; i++)
     freq[i] = 0;
 
@@ -195,6 +195,76 @@ static void huffman_write_header(FILE *fp, struct huff_node_t **nodes, size_t nb
       fwrite(&nodes[i]->freq, sizeof(int), 1, fp);
     }
   }
+}
+
+/*
+ * Write a huffman buffer to output file (input buffer must be converted to binary buffer).
+ */
+static void huffman_write_buffer(FILE *fp, char *buf, size_t len)
+{
+  size_t i, j, n;
+  char c;
+
+  if (len <= 0)
+    return;
+
+  for (i = 0; i < len; i += 8) {
+    c = 0;
+
+    /* number of bits */
+    n = 8;
+    if (i + 8 > len)
+      n = len - i;
+
+    /* convert string huffman code to binary */
+    for (j = 0; j < n; j++)
+      c |= buf[i + j] << j;
+
+    /* write binary buffer */
+    fwrite(&c, sizeof(char), 1, fp);
+  }
+}
+
+/*
+ * Encode file content with huffman codes.
+ */
+static void huffman_write_content(FILE *fp_input, FILE *fp_output, struct huff_node_t **nodes)
+{
+  unsigned char buf_input[BUF_SIZE];
+  char buf_output[BUF_SIZE];
+  struct huff_node_t *node;
+  size_t len, i, j, k;
+
+  /* rewind input file */
+  rewind(fp_input);
+
+  /* read all file */
+  for (k = 0;;) {
+    /* read input file */
+    len = fread(buf_input, 1, BUF_SIZE, fp_input);
+    if (len <= 0)
+      break;
+
+    /* convert characters to huffman codes */
+    for (i = 0; i < len; i++) {
+      /* get huffman node */
+      node = nodes[(int) buf_input[i]];
+
+      /* store huffman code in output buffer */
+      for (j = 0; node->huff_code[j]; j++) {
+        buf_output[k++] = node->huff_code[j];
+
+        /* output buffer full : write it */
+        if (k >= BUF_SIZE) {
+          huffman_write_buffer(fp_output, buf_output, k);
+          k = 0;
+        }
+      }
+    }
+  }
+
+  /* write last buffer */
+  huffman_write_buffer(fp_output, buf_output, k);
 }
 
 /*
@@ -243,7 +313,8 @@ int huffman_encode(const char *input_file, const char *output_file)
   /*  write header */
   huffman_write_header(fp_output, nodes, NB_CHARACTERS);
 
-  /* TODO : write codes */
+  /* write codes */
+  huffman_write_content(fp_input, fp_output, nodes);
 
   /* free huffman tree */
   huffman_tree_free(root);

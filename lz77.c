@@ -84,12 +84,12 @@ int lz77_compress(const char *input_file, const char *output_file)
     if (match == -1) {
       fputc(0, fp_output);
       fputc(0, fp_output);
-      fputc(buf[0], fp_output);
+      fputc(look_ahead[0], fp_output);
       shift = 1;
     } else {
       fputc(WINDOW_SIZE - match, fp_output);
       fputc(i, fp_output);
-      fputc(buf[i], fp_output);
+      fputc(look_ahead[i], fp_output);
       shift = i + 1;
     }
 

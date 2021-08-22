@@ -69,7 +69,7 @@ int lz77_compress(const char *input_file, const char *output_file)
     look_ahead = window + WINDOW_SIZE;
 
     /* find best match */
-    for (i = buf_size, match = -1; i > 0; i--) {
+    for (i = buf_size - WINDOW_SIZE - 1, match = -1; i > 0; i--) {
       match = lz77_match(window, look_ahead, i);
       if (match != -1)
         break;

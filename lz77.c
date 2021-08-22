@@ -110,3 +110,77 @@ int lz77_compress(const char *input_file, const char *output_file)
 
   return 0;
 }
+
+/*
+ * Uncompress a file with lz77 algorithm.
+ */
+int lz77_uncompress(const char *input_file, const char *output_file)
+{
+  unsigned char window[WINDOW_SIZE], buf_in[3], buf_out[WINDOW_SIZE];
+  int ret, offset, i, j, shift;
+  FILE *fp_input, *fp_output;
+  size_t len;
+
+  /* open input file */
+  fp_input = fopen(input_file, "r");
+  if (!fp_input)
+    return errno;
+
+  /* open output file */
+  fp_output = fopen(output_file, "w");
+  if (!fp_output) {
+    ret = errno;
+    fclose(fp_input);
+    return ret;
+  }
+
+  /* write first uncompressed window */
+  len = fread(window, 1, WINDOW_SIZE, fp_input);
+  fwrite(window, 1, len, fp_output);
+
+  /* end of file */
+  if (len != WINDOW_SIZE)
+    goto out;
+
+  /* lz77 algorithm */
+  while (1) {
+    /* read next 2 characters */
+    len = fread(buf_in, 1, 3, fp_input);
+    if (len != 3)
+      break;
+
+    /* extract pattern offset, length and next char */
+    offset = (int) buf_in[0];
+    len = (int) buf_in[1];
+    shift = len + 1;
+
+    /* decode and write pattern */
+    if (len > 0) {
+      /* decode pattern */
+      for (i = 0, j = WINDOW_SIZE - offset; i < len; i++, j++)
+        buf_out[i] = window[j];
+
+      /* write pattern */
+      fwrite(buf_out, 1, len, fp_output);
+    }
+
+    /* write next character */
+    fputc(buf_in[2], fp_output);
+
+    /* shift window */
+    for (i = 0; i < WINDOW_SIZE - shift; i++)
+      window[i] = window[i + shift];
+
+    /* copy next characters from output buffer to window */
+    for (i = 0, j = WINDOW_SIZE - shift; i < len; i++, j++)
+      window[j] = buf_out[i];
+    window[WINDOW_SIZE - 1] = buf_in[2];
+  }
+
+out:
+  /* close files */
+  fclose(fp_input);
+  fclose(fp_output);
+
+  return 0;
+}

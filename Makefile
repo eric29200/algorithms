@@ -3,7 +3,7 @@ CC      := gcc
 
 all: algo
 
-algo: algo.o list.o queue.o heap.o trie.o huffman.o lz77.o lz78.c
+algo: algo.o list.o queue.o heap.o huffman.o lz77.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 .o: .c

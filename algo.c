@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "lz77.h"
+#include "lz78.h"
 
 /*
  * Usage.
@@ -20,11 +20,11 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  /* lz77 compression */
-  lz77_compress(argv[1], argv[2]);
+  /* lz78 compression */
+  lz78_compress(argv[1], argv[2]);
 
-  /* lz77 uncompression */
-  lz77_uncompress(argv[2], argv[3]);
+  /* lz78 uncompression */
+  lz78_uncompress(argv[2], argv[3]);
 
   return 0;
 }

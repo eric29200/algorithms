@@ -55,14 +55,8 @@ int lz78_compress(const char *input_file, const char *output_file)
     trie_insert(node, c, id++);
 
     /* write compressed data */
-    if (fwrite(&node->id, sizeof(int), 1, fp_output) != 1) {
-      ret = -1;
-      goto out;
-    }
-    if (fwrite(&c, sizeof(char), 1, fp_output) != 1) {
-      ret = -1;
-      goto out;
-    }
+    fwrite(&node->id, sizeof(int), 1, fp_output);
+    fwrite(&c, sizeof(char), 1, fp_output);
 
     /* go back to root */
     node = root;
@@ -70,11 +64,9 @@ int lz78_compress(const char *input_file, const char *output_file)
 
   /* write final dict size */
   rewind(fp_output);
-  if (fwrite(&id, sizeof(int), 1, fp_output) != 1)
-    ret = -1;
-  else
-    ret = 0;
+  fwrite(&id, sizeof(int), 1, fp_output);
 
+  ret = 0;
 out:
   /* free dictionnary */
   trie_free(root);
@@ -91,10 +83,10 @@ out:
  */
 int lz78_uncompress(const char *input_file, const char *output_file)
 {
+  struct trie_t *root = NULL, **dict = NULL, *parent, *node;
   int ret, dict_size, id = 0, parent_id, i;
-  struct trie_t *root = NULL, **dict, *parent, *node;
+  unsigned char c, buffer[1024];
   FILE *fp_input, *fp_output;
-  unsigned char c, buffer[16];
 
   /* open input file */
   fp_input = fopen(input_file, "r");
@@ -110,7 +102,10 @@ int lz78_uncompress(const char *input_file, const char *output_file)
   }
 
   /* get dict size */
-  fread(&dict_size, sizeof(int), 1, fp_input);
+  if (fread(&dict_size, sizeof(int), 1, fp_input) != 1) {
+    ret = -1;
+    goto out;
+  }
 
   /* create dict */
   dict = (struct trie_t **) malloc(sizeof(struct trie_t *) * dict_size);
@@ -136,23 +131,28 @@ int lz78_uncompress(const char *input_file, const char *output_file)
     node = trie_find(parent, c);
     dict[node->id] = node;
 
-    /* decode parent node */
-    for (node = parent, i = 0; node != NULL; node = node->parent, i++)
+    /* decode dict entry */
+    for (node = parent, i = 0; node->parent != NULL; node = node->parent, i++)
       buffer[i] = node->c;
 
+    /* write decoded string */
     for (i = i - 1; i >= 0; i--)
       fwrite(&buffer[i], sizeof(char), 1, fp_output);
+
+    /* write next character */
     fwrite(&c, sizeof(char), 1, fp_output);
   }
 
+  ret = 0;
 out:
   /* free dictionnary */
-  free(dict);
+  if (dict)
+    free(dict);
   trie_free(root);
 
   /* close files */
   fclose(fp_input);
   fclose(fp_output);
 
-  return 0;
+  return ret;
 }

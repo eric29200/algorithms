@@ -41,8 +41,6 @@ int lz78_compress(const char *input_file, const char *output_file)
   for (node = root;;) {
     /* get next character */
     c = fgetc(fp_input);
-    if (c == EOF)
-      break;
 
     /* find character in trie */
     next = trie_find(node, c);
@@ -60,6 +58,10 @@ int lz78_compress(const char *input_file, const char *output_file)
 
     /* go back to root */
     node = root;
+
+    /* end of file */
+    if (c == EOF)
+      break;
   }
 
   /* write final dict size */
@@ -140,7 +142,8 @@ int lz78_uncompress(const char *input_file, const char *output_file)
       fwrite(&buffer[i], sizeof(char), 1, fp_output);
 
     /* write next character */
-    fwrite(&c, sizeof(char), 1, fp_output);
+    if (c != (unsigned char) EOF)
+      fwrite(&c, sizeof(char), 1, fp_output);
   }
 
   ret = 0;

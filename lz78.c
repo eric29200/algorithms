@@ -1,3 +1,11 @@
+/*
+ * LZ77 algorithm = lossless data compression algorithm.
+ * This algorithm maintains a dictionnary (= a trie).
+ * 1 - read each character
+ * 2 - if the character is already in the dictionnary (start at root), go to next character and update tree node
+ *     if the character is not in the dictionnary, add it to the dictionnary and write the previous node id and then character
+ * 3 - write final sequence
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>

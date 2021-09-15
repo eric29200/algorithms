@@ -1,3 +1,11 @@
+/*
+ * LZ77 algorithm = lossless data compression algorithm.
+ * This algorithm maintains a sliding window (user defined parameter).
+ * 1 - read first window of input file and write it exactly to the output file
+ * 2 - try to find a matching pattern of next characher in the window
+ *     -> if it matches, write window reference (offset), pattern length and next character
+ *     -> else write 0,0 and current character
+ */
 #include <stdio.h>
 #include <errno.h>
 

@@ -1,3 +1,13 @@
+/*
+ * Huffman encoding = lossless data compression method, working at alphabet level :
+ * 1 - parse all file to compute frequency of each character
+ * 2 - build huffman tree (min heap) based on frequencies
+ *     -> every letter is a leaf in the heap
+ *     -> more frequent letters have shortest code
+ * 3 - build binary code of every letter
+ * 4 - write header in compressed file = every letter with its frequency (so decompressor will be able to rebuild the tree)
+ * 5 - encode file = replace each letter with binary code
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "heap.h"
+#include "mem.h"
 
 /*
  * Create a heap.
@@ -14,19 +15,12 @@ struct heap_t *heap_create(int type, size_t capacity, int (*compare_func)(const 
   if (type != HEAP_MIN && type != HEAP_MAX)
     return NULL;
 
-  heap = (struct heap_t *) malloc(sizeof(struct heap_t));
-  if (!heap)
-    return NULL;
-
+  heap = (struct heap_t *) xmalloc(sizeof(struct heap_t));
   heap->type = type;
   heap->capacity = capacity;
   heap->size = 0;
   heap->compare_func = compare_func;
-  heap->data = (void **) malloc(sizeof(void *) * capacity);
-  if (!heap->data) {
-    free(heap);
-    return NULL;
-  }
+  heap->data = (void **) xmalloc(sizeof(void *) * capacity);
 
   return heap;
 }
@@ -37,9 +31,7 @@ struct heap_t *heap_create(int type, size_t capacity, int (*compare_func)(const 
 void heap_free(struct heap_t *heap)
 {
   if (heap) {
-    if (heap->data)
-      free(heap->data);
-
+    xfree(heap->data);
     free(heap);
   }
 }

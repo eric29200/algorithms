@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "list.h"
+#include "mem.h"
 
 /*
  * Free all elements of a list.
@@ -39,9 +40,7 @@ struct list_t *list_append(struct list_t *list, void *data)
   struct list_t *new_list, *last;
 
   /* allocate new element */
-  new_list = (struct list_t *) malloc(sizeof(struct list_t));
-  if (!new_list)
-    return NULL;
+  new_list = xmalloc(sizeof(struct list_t));
 
   /* set new element */
   new_list->data = data;
@@ -68,9 +67,7 @@ struct list_t *list_prepend(struct list_t *list, void *data)
   struct list_t *new_list;
 
   /* allocate new element */
-  new_list = (struct list_t *) malloc(sizeof(struct list_t));
-  if (!new_list)
-    return NULL;
+  new_list = (struct list_t *) xmalloc(sizeof(struct list_t));
 
   /* set new element */
   new_list->data = data;
@@ -177,12 +174,7 @@ struct list_t *list_copy(struct list_t *list)
   struct list_t *new_list = NULL, *new_elt, *prev = NULL;
 
   for (; list != NULL; list = list->next) {
-    new_elt = (struct list_t *) malloc(sizeof(struct list_t));
-    if (!new_elt) {
-      list_free(new_list);
-      return NULL;
-    }
-
+    new_elt = (struct list_t *) xmalloc(sizeof(struct list_t));
     new_elt->data = list->data;
     new_elt->prev = prev;
     if (prev)

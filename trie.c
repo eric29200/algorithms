@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "trie.h"
+#include "mem.h"
 
 /*
  * Allocate a new trie (node).
@@ -11,11 +12,7 @@ static struct trie_t *trie_alloc(unsigned char c, int id, struct trie_t *parent)
   struct trie_t *trie;
 
   /* allocate a new trie */
-  trie = (struct trie_t *) malloc(sizeof(struct trie_t));
-  if (!trie)
-    return NULL;
-
-  /* set trie */
+  trie = (struct trie_t *) xmalloc(sizeof(struct trie_t));
   trie->c = c;
   trie->id = id;
   trie->parent = parent;

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
+#include "mem.h"
 
 /*
  * Create a queue.
@@ -9,10 +10,7 @@ struct queue_t *queue_create()
 {
   struct queue_t *queue;
 
-  queue = (struct queue_t *) malloc(sizeof(struct queue_t));
-  if (!queue)
-    return NULL;
-
+  queue = (struct queue_t *) xmalloc(sizeof(struct queue_t));
   queue->head = NULL;
   queue->tail = NULL;
   queue->length = 0;

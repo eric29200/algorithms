@@ -12,6 +12,7 @@
 
 #include "lz78.h"
 #include "trie.h"
+#include "mem.h"
 
 /*
  * Compress a file with lz78 algorithm.
@@ -118,14 +119,16 @@ int lz78_uncompress(const char *input_file, const char *output_file)
   }
 
   /* create dict */
-  dict = (struct trie_t **) malloc(sizeof(struct trie_t *) * dict_size);
+  dict = (struct trie_t **) xmalloc(sizeof(struct trie_t *) * dict_size);
   for (i = 0; i < dict_size; i++)
     dict[i] = NULL;
 
   /* insert root node */
   root = dict[0] = trie_insert(root, 0, id++);
-  if (!root)
+  if (!root) {
+    ret = -1;
     goto out;
+  }
 
   for (;;) {
     /* read lz78 pair */
@@ -157,8 +160,7 @@ int lz78_uncompress(const char *input_file, const char *output_file)
   ret = 0;
 out:
   /* free dictionnary */
-  if (dict)
-    free(dict);
+  xfree(dict);
   trie_free(root);
 
   /* close files */

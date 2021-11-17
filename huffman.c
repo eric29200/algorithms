@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #include "heap.h"
+#include "mem.h"
 
 #define NB_CHARACTERS             256
 #define BUF_SIZE                  1024
@@ -46,10 +47,7 @@ static struct huff_node_t *huff_node_create(unsigned char item, int freq)
 {
   struct huff_node_t *node;
 
-  node = (struct huff_node_t *) malloc(sizeof(struct huff_node_t));
-  if (!node)
-    return NULL;
-
+  node = xmalloc(sizeof(struct huff_node_t));
   node->item = item;
   node->freq = freq;
   node->left = NULL;

@@ -64,6 +64,20 @@ void array_list_free_full(struct array_list_t *list, void (*free_func)(void *))
 }
 
 /*
+ * Clear an array list.
+ */
+void array_list_clear(struct array_list_t *list)
+{
+  if (!list)
+    return;
+
+  xfree(list->elements);
+  list->elements = NULL;
+  list->size = 0;
+  list->capacity = 0;
+}
+
+/*
  * Add an element at the end of a list.
  */
 void array_list_add(struct array_list_t *list, void *element)

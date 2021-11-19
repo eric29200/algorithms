@@ -8,6 +8,17 @@
 #define DISTANCE(p1, p2)      (((p1).x - (p2).x) * ((p1).x - (p2).x) + ((p1).y - (p2).y) * ((p1).y - (p2).y))
 
 /*
+ * Thread argument.
+ */
+struct thread_arg_t {
+  struct point_t *points;
+  size_t nb_points;
+  struct cluster_t **clusters;
+  size_t nb_clusters;
+  size_t nb_changes;
+};
+
+/*
  * Create a cluster.
  */
 static struct cluster_t *cluster_create(struct point_t centroid)
@@ -33,14 +44,6 @@ void cluster_free(struct cluster_t *cluster)
   xfree(cluster->points);
   free(cluster);
 }
-
-struct thread_arg_t {
-  struct point_t *points;
-  size_t nb_points;
-  struct cluster_t **clusters;
-  size_t nb_clusters;
-  size_t nb_changes;
-};
 
 /*
  * Assign points to clusters (thread function).

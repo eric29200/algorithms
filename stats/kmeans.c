@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "kmeans.h"
 #include "../utils/mem.h"
@@ -33,24 +34,32 @@ void cluster_free(struct cluster_t *cluster)
   free(cluster);
 }
 
+struct thread_arg_t {
+  struct point_t *points;
+  size_t nb_points;
+  struct cluster_t **clusters;
+  size_t nb_clusters;
+  size_t nb_changes;
+};
+
 /*
- * Assign points to clusters.
+ * Assign points to clusters (thread function).
  */
-static size_t points2clusters(struct point_t *points, size_t nb_points, struct cluster_t **clusters, size_t nb_clusters)
+static void *points2clusters_thread(void *arg)
 {
+  struct thread_arg_t *targ = (struct thread_arg_t *) arg;
   size_t i, j, cluster_min;
   double dist, dist_min;
-  size_t ret;
 
   /* reset number of changes */
-  ret = 0;
+  targ->nb_changes = 0;
 
   /* assign points to clusters */
-  for (i = 0; i < nb_points; i++) {
+  for (i = 0; i < targ->nb_points; i++) {
     cluster_min = -1;
 
-    for (j = 0; j < nb_clusters; j++) {
-      dist = DISTANCE(points[i], clusters[j]->centroid);
+    for (j = 0; j < targ->nb_clusters; j++) {
+      dist = DISTANCE(targ->points[i], targ->clusters[j]->centroid);
       if (j == 0 || dist < dist_min) {
         dist_min = dist;
         cluster_min = j;
@@ -58,10 +67,42 @@ static size_t points2clusters(struct point_t *points, size_t nb_points, struct c
     }
 
     /* reassign point */
-    if (cluster_min != points[i].cluster_id) {
-      points[i].cluster_id = cluster_min;
-      ret++;
+    if (cluster_min != targ->points[i].cluster_id) {
+      targ->points[i].cluster_id = cluster_min;
+      targ->nb_changes++;
     }
+  }
+
+  return NULL;
+}
+
+/*
+ * Assign points to clusters.
+ */
+static size_t points2clusters(struct point_t *points, size_t nb_points, struct cluster_t **clusters, size_t nb_clusters,
+                              size_t nb_threads)
+{
+  struct thread_arg_t targs[nb_threads];
+  pthread_t threads[nb_threads];
+  size_t i, ret;
+
+  /* create thread arguments */
+  for (i = 0; i < nb_threads; i++) {
+    targs[i].points = &points[i * (nb_points / nb_threads)];
+    targs[i].nb_points = (nb_points / nb_threads) + (i == nb_threads - 1 ? nb_points % nb_threads : 0);
+    targs[i].clusters = clusters;
+    targs[i].nb_clusters = nb_clusters;
+    targs[i].nb_changes = 0;
+  }
+
+  /* create threads */
+  for (i = 0; i < nb_threads; i++)
+    pthread_create(&threads[i], NULL, points2clusters_thread, &targs[i]);
+
+  /* wait for threads */
+  for (i = 0, ret = 0; i < nb_threads; i++) {
+    pthread_join(threads[i], NULL);
+    ret += targs[i].nb_changes;
   }
 
   return ret;
@@ -125,7 +166,7 @@ static void clusters_put_points(struct point_t *points, size_t nb_points, struct
 /*
  * Kmeans algorithm.
  */
-struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k)
+struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k, size_t nb_threads)
 {
   struct cluster_t **clusters;
   size_t i;
@@ -147,7 +188,7 @@ struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k)
   /* compute clusters */
   for (;;) {
     /* assign points to clusters */
-    ret = points2clusters(points, nb_points, clusters, k);
+    ret = points2clusters(points, nb_points, clusters, k, nb_threads);
 
     /* recompute clusters centroids */
     clusters_compute_centroid(points, nb_points, clusters, k);

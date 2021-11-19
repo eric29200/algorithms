@@ -6,7 +6,8 @@
 #include "utils/mem.h"
 
 #define NB_POINTS     100000
-#define K             50
+#define K             100
+#define NB_THREADS    8
 
 /*
  * Main.
@@ -29,7 +30,7 @@ int main(int argc, char **argv)
   }
 
   /* kmeans */
-  clusters = kmeans(points, NB_POINTS, K);
+  clusters = kmeans(points, NB_POINTS, K, NB_THREADS);
 
   /* plot dataset */
   for (i = 0; i < K; i++)

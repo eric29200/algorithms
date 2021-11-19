@@ -12,6 +12,6 @@ struct cluster_t {
 };
 
 void cluster_free(struct cluster_t *cluster);
-struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k);
+struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k, size_t nb_threads);
 
 #endif

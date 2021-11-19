@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
-#include "mem.h"
+#include "../utils/mem.h"
 
 /*
  * Create a queue.

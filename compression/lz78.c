@@ -11,8 +11,8 @@
 #include <errno.h>
 
 #include "lz78.h"
-#include "trie.h"
-#include "mem.h"
+#include "../data_structures/trie.h"
+#include "../utils/mem.h"
 
 /*
  * Compress a file with lz78 algorithm.

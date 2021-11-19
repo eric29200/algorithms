@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "trie.h"
-#include "mem.h"
+#include "../utils/mem.h"
 
 /*
  * Allocate a new trie (node).

@@ -3,11 +3,11 @@ CC      := gcc
 
 all: algo
 
-algo: mem.o algo.o list.o array_list.o queue.o heap.o trie.o huffman.o lz77.o lz78.o
+algo: utils/mem.o compression/huffman.o compression/lz77.o compression/lz78.o data_structures/array_list.o data_structures/list.o data_structures/queue.o data_structures/trie.o data_structures/heap.o algo.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 .o: .c
 	$(CC) $(CFLAGS) -c $^
 
 clean :
-	rm -f *.o algo
+	rm -f *.o */*.o algo

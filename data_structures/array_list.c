@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "array_list.h"
-#include "mem.h"
+#include "../utils/mem.h"
 
 #define ARRAY_LIST_GROW_SIZE      100
 

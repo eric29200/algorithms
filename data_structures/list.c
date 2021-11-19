@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "list.h"
-#include "mem.h"
+#include "../utils/mem.h"
 
 /*
  * Free all elements of a list.

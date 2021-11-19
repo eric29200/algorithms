@@ -13,8 +13,8 @@
 #include <string.h>
 #include <errno.h>
 
-#include "heap.h"
-#include "mem.h"
+#include "../data_structures/heap.h"
+#include "../utils/mem.h"
 
 #define NB_CHARACTERS             256
 #define BUF_SIZE                  1024

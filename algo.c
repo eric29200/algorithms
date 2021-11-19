@@ -5,9 +5,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "huffman.h"
-#include "lz77.h"
-#include "lz78.h"
+#include "compression/huffman.h"
+#include "compression/lz77.h"
+#include "compression/lz78.h"
 
 /*
  * Compression test.

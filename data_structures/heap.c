@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "heap.h"
-#include "mem.h"
+#include "../utils/mem.h"
 
 /*
  * Create a heap.

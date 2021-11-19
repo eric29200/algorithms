@@ -3,23 +3,25 @@
 
 #include "plot/plot.h"
 #include "stats/kmeans.h"
+#include "utils/mem.h"
 
-#define NB_POINTS     10000
-#define K             4
+#define NB_POINTS     100000
+#define K             50
 
 /*
  * Main.
  */
 int main(int argc, char **argv)
 {
-  struct point_t points[NB_POINTS];
   struct cluster_t **clusters;
+  struct point_t *points;
   size_t i;
 
   /* init plot */
   plot_init();
 
   /* create dataset */
+  points = (struct point_t *) xmalloc(sizeof(struct point_t) * NB_POINTS);
   for (i = 0; i < NB_POINTS; i++) {
     points[i].x = (double) rand() / RAND_MAX;
     points[i].y = (double) rand() / RAND_MAX;
@@ -30,10 +32,8 @@ int main(int argc, char **argv)
   clusters = kmeans(points, NB_POINTS, K);
 
   /* plot dataset */
-  plot_add_dataset(clusters[0]->points, clusters[0]->nb_points);
-  plot_add_dataset(clusters[1]->points, clusters[1]->nb_points);
-  plot_add_dataset(clusters[2]->points, clusters[2]->nb_points);
-  plot_add_dataset(clusters[3]->points, clusters[3]->nb_points);
+  for (i = 0; i < K; i++)
+    plot_add_dataset(clusters[i]->points, clusters[i]->nb_points);
 
   /* print gnuplot */
   plot_print();

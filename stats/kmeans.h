@@ -3,15 +3,15 @@
 
 #include <stdio.h>
 
-#include "../utils/point.h"
-
 struct cluster_t {
-  struct point_t centroid;
-  struct point_t *points;
-  size_t nb_points;
+  void *centroid;
+  void *elements;
+  size_t nb_elements;
 };
 
 void cluster_free(struct cluster_t *cluster);
-struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k, size_t nb_threads);
+struct cluster_t **kmeans(void *elements, size_t nb_elements, size_t element_size, size_t k,
+                          double (*distance_func)(const void *, const void *),
+                          void (*mean_func)(void *, size_t, void *));
 
 #endif

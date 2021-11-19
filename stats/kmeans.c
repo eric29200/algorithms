@@ -1,34 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "kmeans.h"
 #include "../utils/mem.h"
 
-#define DISTANCE(p1, p2)      (((p1).x - (p2).x) * ((p1).x - (p2).x) + ((p1).y - (p2).y) * ((p1).y - (p2).y))
-
-/*
- * Thread argument.
- */
-struct thread_arg_t {
-  struct point_t *points;
-  size_t nb_points;
-  struct cluster_t **clusters;
-  size_t nb_clusters;
-  size_t nb_changes;
-};
-
 /*
  * Create a cluster.
  */
-static struct cluster_t *cluster_create(struct point_t centroid)
+static struct cluster_t *cluster_create(void *centroid, size_t element_size)
 {
   struct cluster_t *cluster;
 
   cluster = (struct cluster_t *) xmalloc(sizeof(struct cluster_t));
-  cluster->centroid = centroid;
-  cluster->points = NULL;
-  cluster->nb_points = 0;
+  cluster->centroid = xmalloc(element_size);
+  memcpy(cluster->centroid, centroid, element_size);
+  cluster->elements = NULL;
+  cluster->nb_elements = 0;
 
   return cluster;
 }
@@ -41,168 +30,129 @@ void cluster_free(struct cluster_t *cluster)
   if (!cluster)
     return;
 
-  xfree(cluster->points);
+  xfree(cluster->centroid);
+  xfree(cluster->elements);
   free(cluster);
 }
 
 /*
- * Assign points to clusters (thread function).
+ * Assign elements to clusters.
  */
-static void *points2clusters_thread(void *arg)
+static size_t compute_elements(void *elements, size_t nb_elements, size_t element_size,
+                               struct cluster_t **clusters, size_t nb_clusters,
+                               size_t *elements2clusters,
+                               double (*distance_func)(const void *, const void *))
 {
-  struct thread_arg_t *targ = (struct thread_arg_t *) arg;
-  size_t i, j, cluster_min;
+  size_t i, j, cluster_min, ret = 0;
   double dist, dist_min;
+  void *element;
 
-  /* reset number of changes */
-  targ->nb_changes = 0;
+  /* foreach element */
+  for (i = 0; i < nb_elements; i++) {
+    element = elements + i * element_size;
 
-  /* assign points to clusters */
-  for (i = 0; i < targ->nb_points; i++) {
-    cluster_min = -1;
-
-    for (j = 0; j < targ->nb_clusters; j++) {
-      dist = DISTANCE(targ->points[i], targ->clusters[j]->centroid);
+    /* compute nearest cluster */
+    for (j = 0, cluster_min = -1; j < nb_clusters; j++) {
+      dist = distance_func(element, clusters[j]->centroid);
       if (j == 0 || dist < dist_min) {
-        dist_min = dist;
         cluster_min = j;
+        dist_min = dist;
       }
     }
 
-    /* reassign point */
-    if (cluster_min != targ->points[i].cluster_id) {
-      targ->points[i].cluster_id = cluster_min;
-      targ->nb_changes++;
+    /* update element2cluster */
+    if (cluster_min != elements2clusters[i]) {
+      elements2clusters[i] = cluster_min;
+      ret++;
     }
-  }
-
-  return NULL;
-}
-
-/*
- * Assign points to clusters.
- */
-static size_t points2clusters(struct point_t *points, size_t nb_points, struct cluster_t **clusters, size_t nb_clusters,
-                              size_t nb_threads)
-{
-  struct thread_arg_t targs[nb_threads];
-  pthread_t threads[nb_threads];
-  size_t i, ret;
-
-  /* create thread arguments */
-  for (i = 0; i < nb_threads; i++) {
-    targs[i].points = &points[i * (nb_points / nb_threads)];
-    targs[i].nb_points = (nb_points / nb_threads) + (i == nb_threads - 1 ? nb_points % nb_threads : 0);
-    targs[i].clusters = clusters;
-    targs[i].nb_clusters = nb_clusters;
-    targs[i].nb_changes = 0;
-  }
-
-  /* create threads */
-  for (i = 0; i < nb_threads; i++)
-    pthread_create(&threads[i], NULL, points2clusters_thread, &targs[i]);
-
-  /* wait for threads */
-  for (i = 0, ret = 0; i < nb_threads; i++) {
-    pthread_join(threads[i], NULL);
-    ret += targs[i].nb_changes;
   }
 
   return ret;
 }
 
 /*
- * Compute cluster centroid.
+ * Compute clusters.
  */
-static void clusters_compute_centroid(struct point_t *points, size_t nb_points,
-                                      struct cluster_t **clusters, size_t nb_clusters)
-{
-  size_t i;
-
-  /* reset clusters */
-  for (i = 0; i < nb_clusters; i++) {
-    clusters[i]->centroid.x = 0;
-    clusters[i]->centroid.y = 0;
-    clusters[i]->nb_points = 0;
-  }
-
-  /* sum x/y */
-  for (i = 0; i < nb_points; i++) {
-    clusters[points[i].cluster_id]->centroid.x += points[i].x;
-    clusters[points[i].cluster_id]->centroid.y += points[i].y;
-    clusters[points[i].cluster_id]->nb_points++;
-  }
-
-  /* compute mean */
-  for (i = 0; i < nb_clusters; i++) {
-    if (clusters[i]->nb_points > 0) {
-      clusters[i]->centroid.x /= clusters[i]->nb_points;
-      clusters[i]->centroid.y /= clusters[i]->nb_points;
-    }
-  }
-}
-
-/*
- * Put points in clusters.
- */
-static void clusters_put_points(struct point_t *points, size_t nb_points, struct cluster_t **clusters, size_t nb_clusters)
+static void compute_clusters(void *elements, size_t nb_elements, size_t element_size,
+                             struct cluster_t **clusters, size_t nb_clusters,
+                             size_t *elements2clusters,
+                             void (*mean_func)(void *, size_t, void *))
 {
   struct cluster_t *cluster;
   size_t i;
 
-  /* allocate clusters points */
+  /* clear clusters */
   for (i = 0; i < nb_clusters; i++) {
-    if (clusters[i]->nb_points <= 0)
-      continue;
-
-    clusters[i]->points = (struct point_t *) xmalloc(sizeof(struct point_t) * clusters[i]->nb_points);
-    clusters[i]->nb_points = 0;
+    xfree(clusters[i]->elements);
+    clusters[i]->nb_elements = 0;
   }
 
-  /* put points in clusters */
-  for (i = 0; i < nb_points; i++) {
-    cluster = clusters[points[i].cluster_id];
-    cluster->points[cluster->nb_points++] = points[i];
+  /* get number of elements by cluster */
+  for (i = 0; i < nb_elements; i++) {
+    cluster = clusters[elements2clusters[i]];
+    cluster->nb_elements++;
   }
+
+  /* allocate cluster elements */
+  for (i = 0; i < nb_clusters; i++) {
+    clusters[i]->elements = xmalloc(clusters[i]->nb_elements * element_size);
+    clusters[i]->nb_elements = 0;
+  }
+
+  /* put elements in clusters */
+  for (i = 0; i < nb_elements; i++) {
+    cluster = clusters[elements2clusters[i]];
+    memcpy(cluster->elements + cluster->nb_elements * element_size, elements + i * element_size, element_size);
+    cluster->nb_elements++;
+  }
+
+  /* recompute centroids */
+  for (i = 0; i < nb_clusters; i++)
+    mean_func(clusters[i]->elements, clusters[i]->nb_elements, clusters[i]->centroid);
 }
 
 /*
  * Kmeans algorithm.
  */
-struct cluster_t **kmeans(struct point_t *points, size_t nb_points, size_t k, size_t nb_threads)
+struct cluster_t **kmeans(void *elements, size_t nb_elements, size_t element_size, size_t k,
+                          double (*distance_func)(const void *, const void *),
+                          void (*mean_func)(void *, size_t, void *))
 {
   struct cluster_t **clusters;
-  size_t i;
-  int ret;
+  size_t *elements2clusters;
+  size_t i, ret;
 
   /* check K */
-  if (nb_points < k)
+  if (nb_elements < k)
     return NULL;
 
   /* create clusters */
-  clusters = (struct cluster_t **) xmalloc(sizeof(struct cluster_t) * k);
+  clusters = (struct cluster_t **) xmalloc(sizeof(struct cluster_t *) * k);
   for (i = 0; i < k; i++)
-    clusters[i] = cluster_create(points[rand() % nb_points]);
+    clusters[i] = cluster_create(elements + (rand() / nb_elements) * element_size, element_size);
 
-  /* reset clusters ids */
-  for (i = 0; i < nb_points; i++)
-    points[i].cluster_id = -1;
+  /* create elements2clusters array */
+  elements2clusters = (size_t *) xmalloc(sizeof(size_t) * nb_elements);
+  for (i = 0; i < nb_elements; i++)
+    elements2clusters[i] = -1;
 
-  /* compute clusters */
+  /* compute */
   for (;;) {
-    /* assign points to clusters */
-    ret = points2clusters(points, nb_points, clusters, k, nb_threads);
+    /* assign elements to clusters */
+    ret = compute_elements(elements, nb_elements, element_size, clusters, k,
+                           elements2clusters, distance_func);
 
-    /* recompute clusters centroids */
-    clusters_compute_centroid(points, nb_points, clusters, k);
+    /* compute clusters */
+    compute_clusters(elements, nb_elements, element_size, clusters, k, elements2clusters,
+                     mean_func);
 
-    /* no more changes : exit */
-    if (ret == 0)
+    /* no more changes : break */
+    if (ret <= 0)
       break;
   }
 
-  /* finally put points in clusters */
-  clusters_put_points(points, nb_points, clusters, k);
+  /* free elements2clusters array */
+  free(elements2clusters);
 
   return clusters;
 }

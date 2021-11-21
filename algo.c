@@ -2,6 +2,13 @@
 #include <stdlib.h>
 
 #include "data_structures/hash_table.h"
+#include "sort/sort_quick.h"
+#include "search/search_sequential.h"
+#include "search/search_binary.h"
+#include "utils/mem.h"
+
+#define NB_TESTS          10000
+#define NB_ELEMENTS       200000
 
 /*
  * Hash an integer.
@@ -20,28 +27,37 @@ static inline int equal_int(const void *a1, const void *a2)
 }
 
 /*
+ * Integer comparison.
+ */
+static inline int compare_int(const void *a1, const void *a2)
+{
+  return *((int *) a1) - *((int *) a2);
+}
+
+/*
  * Main.
  */
 int main()
 {
-  struct hash_table_t *hash_table;
-  int data[10];
+  int *data, i, key;
 
-  hash_table = hash_table_create(10, hash_int, equal_int);
+  /* create data */
+  data = (int *) xmalloc(sizeof(int) * NB_ELEMENTS);
+  for (i = 0; i < NB_ELEMENTS; i++)
+    data[i] = rand();
 
-  data[0] = 1;
-  data[1] = 2;
-  data[2] = 11;
-  printf("%d\n", hash_table_put(hash_table, &data[0], &data[0]) == NULL);
-  printf("%d\n", hash_table_put(hash_table, &data[1], &data[1]) == NULL);
-  printf("%d\n", hash_table_put(hash_table, &data[2], &data[2]) == NULL);
-  printf("%d\n", hash_table_put(hash_table, &data[2], &data[2]) == NULL);
+  /* generate random key */
+  key = rand();
 
-  hash_table_remove(hash_table, &data[2]);
-  hash_table_remove(hash_table, &data[2]);
-  hash_table_remove(hash_table, &data[2]);
+  /* sort data */
+  sort_quick(data, NB_ELEMENTS, sizeof(int), compare_int);
 
-  hash_table_free(hash_table);
+  /* binary search */
+  for (i = 0; i < NB_TESTS; i++)
+    search_binary(data, NB_ELEMENTS, sizeof(int), &key, compare_int);
+
+  /* free elements */
+  free(data);
 
   return 0;
 }

@@ -1,50 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
-#include "sort/sort_bubble.h"
-#include "sort/sort_insertion.h"
-#include "sort/sort_quick.h"
-#include "sort/sort_merge.h"
-#include "sort/sort_heap.h"
-#include "utils/mem.h"
-
-#define NB_ELEMENTS   20000000
+#include "data_structures/hash_table.h"
 
 /*
- * Integer comparison.
+ * Hash an integer.
  */
-static inline int int_compare(const void *a1, const void *a2)
+static inline int hash_int(const void *data)
 {
-  return *((int *) a1) - *((int *) a2);
+  return *((int *) data);
 }
 
 /*
- * Sort test.
+ * Integer equality.
  */
-static void sort_test(void *data, const char *method, void (*sort)(void *, int, size_t, int (*compare)()))
+static inline int equal_int(const void *a1, const void *a2)
 {
-  clock_t start, end;
-  double time;
-  void *tmp;
-
-  /* copy data */
-  tmp = xmalloc(NB_ELEMENTS * sizeof(int));
-  memcpy(tmp, data, NB_ELEMENTS * sizeof(int));
-
-  /* sort */
-  start = clock();
-  sort(tmp, NB_ELEMENTS, sizeof(int), int_compare);
-  end = clock();
-  time = (double) (end - start) / CLOCKS_PER_SEC;
-
-  /* free tmp data */
-  free(tmp);
-
-  /* print statistics */
-  printf("******* %s\n", method);
-  printf("Sort time : %f\n", time);
+  return *((int *) a1) == *((int *) a2);
 }
 
 /*
@@ -52,25 +24,24 @@ static void sort_test(void *data, const char *method, void (*sort)(void *, int, 
  */
 int main()
 {
-  int *data;
-  size_t i;
+  struct hash_table_t *hash_table;
+  int data[10];
 
-  /* create elements */
-  data = (int *) xmalloc(sizeof(int) * NB_ELEMENTS);
-  for (i = 0; i < NB_ELEMENTS; i++)
-    data[i] = rand() % 10;
+  hash_table = hash_table_create(10, hash_int, equal_int);
 
-  /* heap sort */
-  sort_test(data, "Heap sort", sort_heap);
+  data[0] = 1;
+  data[1] = 2;
+  data[2] = 11;
+  printf("%d\n", hash_table_put(hash_table, &data[0], &data[0]) == NULL);
+  printf("%d\n", hash_table_put(hash_table, &data[1], &data[1]) == NULL);
+  printf("%d\n", hash_table_put(hash_table, &data[2], &data[2]) == NULL);
+  printf("%d\n", hash_table_put(hash_table, &data[2], &data[2]) == NULL);
 
-  /* quick sort */
-  sort_test(data, "Quick sort", sort_quick);
+  hash_table_remove(hash_table, &data[2]);
+  hash_table_remove(hash_table, &data[2]);
+  hash_table_remove(hash_table, &data[2]);
 
-  /* merge sort */
-  sort_test(data, "Merge sort", sort_merge);
-
-  /* free data */
-  free(data);
+  hash_table_free(hash_table);
 
   return 0;
 }

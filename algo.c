@@ -69,8 +69,8 @@ int main()
   graph_add_edge(graph, 14, 8);
   graph_add_edge(graph, 15, 9);
 
-  /* depth first search */
-  graph_dfs(graph);
+  /* breadth first search */
+  graph_bfs(graph);
 
   /* free graph */
   graph_free(graph);

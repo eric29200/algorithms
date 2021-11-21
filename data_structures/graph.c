@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "graph.h"
+#include "queue.h"
 #include "../utils/mem.h"
 
 /*
@@ -133,6 +134,56 @@ void graph_dfs(struct graph_t *graph)
   for (i = 0; i < graph->size; i++)
     if (visited[i] == 0)
       __graph_dfs(graph->vertices[i], visited);
+
+  /* free visited array */
+  free(visited);
+}
+
+/*
+ * Breadth First Search.
+ */
+void graph_bfs(struct graph_t *graph)
+{
+  struct graph_vertex_t *vertex;
+  struct graph_edge_t *edge;
+  struct queue_t *queue;
+  struct list_t *it;
+  char *visited;
+  size_t i;
+
+  if (!graph || graph->size == 0)
+    return;
+
+  /* allocate visited array */
+  visited = (char *) xmalloc(graph->size);
+  for (i = 0; i < graph->size; i++)
+    visited[i] = 0;
+
+  /* create a queue and enqeueue first vertex */
+  queue = queue_create();
+  queue_push_head(queue, graph->vertices[0]);
+  visited[graph->vertices[0]->id] = 1;
+
+  /* go through queue */
+  while (!queue_is_empty(queue)) {
+    /* get next vertex */
+    vertex = queue_pop_head(queue);
+
+    /* mark it visited */
+    printf("%s\n", vertex->label);
+
+    /* enqueue edges */
+    for (it = vertex->edges; it != NULL; it = it->next) {
+      edge = (struct graph_edge_t *) it->data;
+      if (visited[edge->dst->id] == 0) {
+        visited[edge->dst->id] = 1;
+        queue_push_tail(queue, edge->dst);
+      }
+    }
+  }
+
+  /* free queue */
+  queue_free(queue);
 
   /* free visited array */
   free(visited);

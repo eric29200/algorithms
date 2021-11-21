@@ -73,6 +73,7 @@ void graph_add_vertex(struct graph_t *graph, const char *label)
 
   /* create new vertex */
   vertex = (struct graph_vertex_t *) xmalloc(sizeof(struct graph_vertex_t));
+  vertex->id = graph->size;
   vertex->label = label ? xstrdup(label) : NULL;
   vertex->edges = NULL;
 
@@ -100,4 +101,46 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
   /* add it at the begining of src edges */
   edge->next = graph->vertices[src]->edges;
   graph->vertices[src]->edges = edge;
+}
+
+/*
+ * Recursive depth first search.
+ */
+static void __graph_dfs(struct graph_vertex_t *vertex, char *visited)
+{
+  struct graph_edge_t *edge;
+
+  /* visit vertex */
+  visited[vertex->id] = 1;
+  printf("%s\n", vertex->label);
+
+  /* visite edges */
+  for (edge = vertex->edges; edge != NULL; edge = edge->next)
+    if (visited[edge->dst->id] == 0)
+      __graph_dfs(edge->dst, visited);
+}
+
+/*
+ * Depth First Search.
+ */
+void graph_dfs(struct graph_t *graph)
+{
+  char *visited;
+  size_t i;
+
+  if (!graph || graph->size == 0)
+    return;
+
+  /* allocate visited array */
+  visited = (char *) xmalloc(graph->size);
+  for (i = 0; i < graph->size; i++)
+    visited[i] = 0;
+
+  /* for each vertex */
+  for (i = 0; i < graph->size; i++)
+    if (visited[i] == 0)
+      __graph_dfs(graph->vertices[i], visited);
+
+  /* free visited array */
+  free(visited);
 }

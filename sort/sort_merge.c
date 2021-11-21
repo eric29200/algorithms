@@ -8,10 +8,10 @@
 /*
  * Recursive merge sort.
  */
-static void __sort_merge(void *data, size_t i, size_t j, size_t element_size, void *tmp,
+static void __sort_merge(void *data, int i, int j, size_t element_size, void *tmp,
                          int (*compare)(const void *, const void *))
 {
-  size_t mid, k, ptr_left, ptr_right;
+  int mid, k, ptr_left, ptr_right;
 
   if (j <= i)
     return;
@@ -40,7 +40,7 @@ static void __sort_merge(void *data, size_t i, size_t j, size_t element_size, vo
 /*
  * Merge sort.
  */
-void sort_merge(void *data, size_t size, size_t element_size, int (*compare)(const void *, const void *))
+void sort_merge(void *data, int size, size_t element_size, int (*compare)(const void *, const void *))
 {
   void *tmp;
 

@@ -18,11 +18,11 @@ static inline void swap(void *e1, void *e2, void *tmp, size_t element_size)
 /*
  * Bubble sort.
  */
-void sort_bubble(void *data, size_t size, size_t element_size, int (*compare)(const void *, const void *))
+void sort_bubble(void *data, int size, size_t element_size, int (*compare)(const void *, const void *))
 {
   char change = 1;
   void *tmp;
-  size_t i;
+  int i;
 
   /* check input array */
   if (!data || size == 0 || element_size < 2)

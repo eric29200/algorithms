@@ -23,7 +23,7 @@ static inline int int_compare(const void *a1, const void *a2)
 /*
  * Sort test.
  */
-static void sort_test(void *data, const char *method, void (*sort)(void *, size_t, size_t, int (*compare)()))
+static void sort_test(void *data, const char *method, void (*sort)(void *, int, size_t, int (*compare)()))
 {
   clock_t start, end;
   double time;
@@ -50,7 +50,7 @@ static void sort_test(void *data, const char *method, void (*sort)(void *, size_
 /*
  * Main.
  */
-int main(int argc, char **argv)
+int main()
 {
   int *data;
   size_t i;

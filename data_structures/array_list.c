@@ -99,7 +99,7 @@ void array_list_add_idx(struct array_list_t *list, size_t idx, void *element)
 {
   size_t i;
 
-  if (!list || idx < 0 || idx > list->size)
+  if (!list || idx > list->size)
     return;
 
   /* grow array list if needed */
@@ -121,7 +121,7 @@ void *array_list_set(struct array_list_t *list, size_t idx, void *element)
 {
   void *ret;
 
-  if (!list || idx < 0 || idx >= list->size)
+  if (!list || idx >= list->size)
     return NULL;
 
   ret = list->elements[idx];
@@ -137,7 +137,7 @@ void *array_list_remove(struct array_list_t *list, size_t idx)
   void *ret;
   size_t i;
 
-  if (!list || idx < 0 || idx >= list->size)
+  if (!list || idx >= list->size)
     return NULL;
 
   /* save element */

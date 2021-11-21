@@ -7,7 +7,7 @@
 /*
  * Create a heap.
  */
-struct heap_t *heap_create(int type, size_t capacity, int (*compare_func)(const void *, const void *))
+struct heap_t *heap_create(int type, int capacity, int (*compare_func)(const void *, const void *))
 {
   struct heap_t *heap;
 
@@ -41,7 +41,7 @@ void heap_free(struct heap_t *heap)
  */
 void heap_free_full(struct heap_t *heap, void (*free_func)(void *))
 {
-  size_t i;
+  int i;
 
   if (heap) {
     if (heap->data) {

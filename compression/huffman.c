@@ -67,12 +67,12 @@ static struct huff_node_t *huffman_tree(int *freq, size_t nb_characters)
   size_t i;
 
   /* create a heap */
-  heap = heap_create(HEAP_MIN, NB_CHARACTERS * 2, huff_node_compare);
+  heap = heap_create(HEAP_MIN, nb_characters * 2, huff_node_compare);
   if (!heap)
     return NULL;
 
   /* build min heap */
-  for (i = 0; i < NB_CHARACTERS; i++) {
+  for (i = 0; i < nb_characters; i++) {
     if (freq[i]) {
       /* create node */
       node = huff_node_create(i, freq[i]);

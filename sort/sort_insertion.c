@@ -8,7 +8,7 @@
 /*
  * Insertion sort.
  */
-void sort_insertion(void *data, size_t size, size_t element_size, int (*compare)(const void *, const void *))
+void sort_insertion(void *data, int size, size_t element_size, int (*compare)(const void *, const void *))
 {
   void *key;
   int i, j;

@@ -3,8 +3,8 @@
 struct heap_t {
   int type;
   void **data;
-  size_t capacity;
-  size_t size;
+  int capacity;
+  int size;
   int (*compare_func)(const void *, const void *);
 };
 
@@ -16,7 +16,7 @@ struct heap_t {
 #define heap_left(i)            (2 * (i) + 1)
 #define heap_right(i)           (2 * (i) + 2)
 
-struct heap_t *heap_create(int type, size_t capacity, int (*compare_func)(const void *, const void *));
+struct heap_t *heap_create(int type, int capacity, int (*compare_func)(const void *, const void *));
 void heap_free(struct heap_t *heap);
 void heap_free_full(struct heap_t *heap, void (*free_func)(void *));
 void heap_insert(struct heap_t *heap, void *data);

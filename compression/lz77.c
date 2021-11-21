@@ -43,9 +43,8 @@ static inline int lz77_match(unsigned char *window, unsigned char *s, int len)
 int lz77_compress(const char *input_file, const char *output_file)
 {
   unsigned char buf[BUFFER_SIZE], *window, *look_ahead;
+  int ret, i, match, shift, len, buf_size;
   FILE *fp_input, *fp_output;
-  int ret, i, match, shift;
-  size_t len, buf_size;
 
   /* open input file */
   fp_input = fopen(input_file, "r");
@@ -125,9 +124,8 @@ int lz77_compress(const char *input_file, const char *output_file)
 int lz77_uncompress(const char *input_file, const char *output_file)
 {
   unsigned char window[WINDOW_SIZE], buf_in[3], buf_out[WINDOW_SIZE];
-  int ret, offset, i, j, shift;
+  int ret, offset, i, j, shift, len;
   FILE *fp_input, *fp_output;
-  size_t len;
 
   /* open input file */
   fp_input = fopen(input_file, "r");

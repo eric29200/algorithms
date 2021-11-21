@@ -17,11 +17,11 @@ static inline void swap(void *e1, void *e2, void *tmp, size_t element_size)
 /*
  * Recursive quick sort.
  */
-static void __quick_sort(void *data, size_t size, size_t element_size, void *tmp,
+static void __quick_sort(void *data, int size, size_t element_size, void *tmp,
                          int (*compare)(const void *, const void *))
 {
   void *pivot;
-  size_t i, j;
+  int i, j;
 
   if (size < 2)
     return;
@@ -54,7 +54,7 @@ static void __quick_sort(void *data, size_t size, size_t element_size, void *tmp
 /*
  * Quick sort.
  */
-void sort_quick(void *data, size_t size, size_t element_size, int (*compare)(const void *, const void *))
+void sort_quick(void *data, int size, size_t element_size, int (*compare)(const void *, const void *))
 {
   void *tmp;
 

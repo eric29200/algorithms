@@ -18,10 +18,10 @@ static inline void swap(void *e1, void *e2, void *tmp, size_t element_size)
 /*
  * Get maximum element from i, j, k.
  */
-static size_t max(void *data, size_t size, size_t element_size, size_t i, size_t j, size_t k,
+static size_t max(void *data, int size, size_t element_size, int i, int j, int k,
                   int (*compare)(const void *, const void *))
 {
-  size_t m = i;
+  int m = i;
 
   if (j < size && compare(data + j * element_size, data + m * element_size) > 0)
     m = j;
@@ -35,10 +35,10 @@ static size_t max(void *data, size_t size, size_t element_size, size_t i, size_t
 /*
  * Heapify an array.
  */
-static void heapify(void *data, size_t size, size_t element_size, size_t i, void *tmp,
+static void heapify(void *data, int size, size_t element_size, int i, void *tmp,
                     int (*compare)(const void *, const void *))
 {
-  size_t j;
+  int j;
 
   for (;;) {
     j = max(data, size, element_size, i, 2 * i + 1, 2 * i + 2, compare);
@@ -53,7 +53,7 @@ static void heapify(void *data, size_t size, size_t element_size, size_t i, void
 /*
  * Heap sort.
  */
-void sort_heap(void *data, size_t size, size_t element_size, int (*compare)(const void *, const void *))
+void sort_heap(void *data, int size, size_t element_size, int (*compare)(const void *, const void *))
 {
   void *tmp;
   int i;

@@ -7,7 +7,7 @@
 /*
  * Create a hash table.
  */
-struct hash_table_t *hash_table_create(size_t capacity, int (*hash_func)(const void *),
+struct hash_table_t *hash_table_create(size_t capacity, unsigned int (*hash_func)(const void *),
                                        int (*equal_func)(const void *, const void *))
 {
   struct hash_table_t *hash_table;
@@ -57,8 +57,8 @@ void hash_table_free(struct hash_table_t *hash_table)
 void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
 {
   struct hash_table_element_t *elt;
+  unsigned int hash;
   void *ret;
-  int hash;
 
   if (!hash_table)
     return NULL;
@@ -92,7 +92,7 @@ void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
 void *hash_table_get(struct hash_table_t *hash_table, void *key)
 {
   struct hash_table_element_t *elt;
-  int hash;
+  unsigned int hash;
 
   if (!hash_table)
     return NULL;
@@ -114,8 +114,8 @@ void *hash_table_get(struct hash_table_t *hash_table, void *key)
 void *hash_table_remove(struct hash_table_t *hash_table, void *key)
 {
   struct hash_table_element_t *elt, *prev;
+  unsigned int hash;
   void *ret;
-  int hash;
 
   if (!hash_table)
     return NULL;

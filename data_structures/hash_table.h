@@ -13,11 +13,11 @@ struct hash_table_t {
   size_t size;
   size_t capacity;
   struct hash_table_element_t **elements;
-  int (*hash_func)(const void *);
+  unsigned int (*hash_func)(const void *);
   int (*equal_func)(const void *, const void *);
 };
 
-struct hash_table_t *hash_table_create(size_t capacity, int (*hash_func)(const void *),
+struct hash_table_t *hash_table_create(size_t capacity, unsigned int (*hash_func)(const void *),
                                        int (*equal_func)(const void *, const void *));
 void hash_table_free(struct hash_table_t *hash_table);
 void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data);

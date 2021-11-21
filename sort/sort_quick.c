@@ -59,7 +59,7 @@ void sort_quick(void *data, size_t size, size_t element_size, int (*compare)(con
   void *tmp;
 
   /* check input array */
-  if (!data || size == 0 || element_size == 0)
+  if (!data || size == 0 || element_size < 2)
     return;
 
   /* allocate tmp */

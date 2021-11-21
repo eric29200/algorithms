@@ -25,7 +25,7 @@ void sort_bubble(void *data, size_t size, size_t element_size, int (*compare)(co
   size_t i;
 
   /* check input array */
-  if (!data || size == 0 || element_size == 0)
+  if (!data || size == 0 || element_size < 2)
     return;
 
   /* allocate tmp */

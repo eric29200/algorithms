@@ -4,6 +4,7 @@
 #include "sort/sort_bubble.h"
 #include "sort/sort_insertion.h"
 #include "sort/sort_quick.h"
+#include "sort/sort_merge.h"
 #include "utils/mem.h"
 
 #define NB_ELEMENTS   20
@@ -35,7 +36,7 @@ int main(int argc, char **argv)
   printf("\n");
 
   /* sort array */
-  sort_quick(data, NB_ELEMENTS, sizeof(int), int_compare);
+  sort_merge(data, NB_ELEMENTS, sizeof(int), int_compare);
 
   /* print data */
   for (i = 0; i < NB_ELEMENTS; i++)

@@ -14,7 +14,7 @@ void sort_insertion(void *data, size_t size, size_t element_size, int (*compare)
   int i, j;
 
   /* check input array */
-  if (!data || size == 0 || element_size == 0)
+  if (!data || size == 0 || element_size < 2)
     return;
 
   /* allocate key */

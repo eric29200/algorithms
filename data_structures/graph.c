@@ -23,19 +23,10 @@ struct graph_t *graph_create()
  */
 void __graph_vertex_free(struct graph_vertex_t *vertex)
 {
-  struct graph_edge_t *edge, *next;
-
   if (!vertex)
     return;
 
-  /* free edges */
-  for (edge = vertex->edges; edge != NULL;) {
-    next = edge->next;
-    free(edge);
-    edge = next;
-  }
-
-  /* free vertex */
+  list_free_full(vertex->edges, free);
   xfree(vertex->label);
   free(vertex);
 }
@@ -99,8 +90,7 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
   edge->dst = graph->vertices[dst];
 
   /* add it at the begining of src edges */
-  edge->next = graph->vertices[src]->edges;
-  graph->vertices[src]->edges = edge;
+  graph->vertices[src]->edges = list_prepend(graph->vertices[src]->edges, edge);
 }
 
 /*
@@ -109,15 +99,18 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
 static void __graph_dfs(struct graph_vertex_t *vertex, char *visited)
 {
   struct graph_edge_t *edge;
+  struct list_t *it;
 
   /* visit vertex */
   visited[vertex->id] = 1;
   printf("%s\n", vertex->label);
 
   /* visite edges */
-  for (edge = vertex->edges; edge != NULL; edge = edge->next)
+  for (it = vertex->edges; it != NULL; it = it->next) {
+    edge = (struct graph_edge_t *) it->data;
     if (visited[edge->dst->id] == 0)
       __graph_dfs(edge->dst, visited);
+  }
 }
 
 /*

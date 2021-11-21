@@ -2,16 +2,16 @@
 #define _GRAPH_H_
 
 #include <stdio.h>
+#include "list.h"
 
 struct graph_edge_t {
   struct graph_vertex_t *dst;
-  struct graph_edge_t *next;
 };
 
 struct graph_vertex_t {
   int id;
   char *label;
-  struct graph_edge_t *edges;
+  struct list_t *edges;
 };
 
 struct graph_t {

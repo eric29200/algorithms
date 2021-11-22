@@ -67,6 +67,7 @@ void graph_add_vertex(struct graph_t *graph, const char *label)
   vertex = (struct graph_vertex_t *) xmalloc(sizeof(struct graph_vertex_t));
   vertex->id = graph->size;
   vertex->label = label ? xstrdup(label) : NULL;
+  vertex->visited = 0;
   vertex->edges = NULL;
 
   /* add it to graph */
@@ -97,20 +98,20 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
 /*
  * Recursive depth first search.
  */
-static void __graph_dfs(struct graph_vertex_t *vertex, char *visited)
+static void __graph_dfs(struct graph_vertex_t *vertex)
 {
   struct graph_edge_t *edge;
   struct list_t *it;
 
   /* visit vertex */
-  visited[vertex->id] = 1;
+  vertex->visited = 1;
   printf("%s\n", vertex->label);
 
   /* visite edges */
   for (it = vertex->edges; it != NULL; it = it->next) {
     edge = (struct graph_edge_t *) it->data;
-    if (visited[edge->dst->id] == 0)
-      __graph_dfs(edge->dst, visited);
+    if (edge->dst->visited == 0)
+      __graph_dfs(edge->dst);
   }
 }
 
@@ -119,24 +120,19 @@ static void __graph_dfs(struct graph_vertex_t *vertex, char *visited)
  */
 void graph_dfs(struct graph_t *graph)
 {
-  char *visited;
   size_t i;
 
   if (!graph || graph->size == 0)
     return;
 
-  /* allocate visited array */
-  visited = (char *) xmalloc(graph->size);
+  /* unmark all vertices */
   for (i = 0; i < graph->size; i++)
-    visited[i] = 0;
+    graph->vertices[i]->visited = 0;
 
   /* for each vertex */
   for (i = 0; i < graph->size; i++)
-    if (visited[i] == 0)
-      __graph_dfs(graph->vertices[i], visited);
-
-  /* free visited array */
-  free(visited);
+    if (graph->vertices[i]->visited == 0)
+      __graph_dfs(graph->vertices[i]);
 }
 
 /*
@@ -148,21 +144,19 @@ void graph_bfs(struct graph_t *graph)
   struct graph_edge_t *edge;
   struct queue_t *queue;
   struct list_t *it;
-  char *visited;
   size_t i;
 
   if (!graph || graph->size == 0)
     return;
 
-  /* allocate visited array */
-  visited = (char *) xmalloc(graph->size);
+  /* unmark all vertices */
   for (i = 0; i < graph->size; i++)
-    visited[i] = 0;
+    graph->vertices[i]->visited = 0;
 
   /* create a queue and enqeueue first vertex */
   queue = queue_create();
   queue_push_head(queue, graph->vertices[0]);
-  visited[graph->vertices[0]->id] = 1;
+  graph->vertices[0]->visited = 1;
 
   /* go through queue */
   while (!queue_is_empty(queue)) {
@@ -175,8 +169,8 @@ void graph_bfs(struct graph_t *graph)
     /* enqueue edges */
     for (it = vertex->edges; it != NULL; it = it->next) {
       edge = (struct graph_edge_t *) it->data;
-      if (visited[edge->dst->id] == 0) {
-        visited[edge->dst->id] = 1;
+      if (edge->dst->visited == 0) {
+        edge->dst->visited = 1;
         queue_push_tail(queue, edge->dst);
       }
     }
@@ -184,7 +178,4 @@ void graph_bfs(struct graph_t *graph)
 
   /* free queue */
   queue_free(queue);
-
-  /* free visited array */
-  free(visited);
 }

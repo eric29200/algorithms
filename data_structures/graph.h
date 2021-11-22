@@ -11,6 +11,7 @@ struct graph_edge_t {
 struct graph_vertex_t {
   int id;
   char *label;
+  int visited;
   struct list_t *edges;
 };
 

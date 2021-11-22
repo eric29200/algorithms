@@ -18,9 +18,9 @@ struct hash_table_t *hash_table_create(size_t capacity, unsigned int (*hash_func
   hash_table->capacity = capacity;
   hash_table->hash_func = hash_func;
   hash_table->equal_func = equal_func;
-  hash_table->elements = (struct hash_table_element_t **) xmalloc(sizeof(struct hash_table_element_t *) * capacity);
+  hash_table->items = (struct hash_table_item_t **) xmalloc(sizeof(struct hash_table_item_t *) * capacity);
   for (i = 0; i < capacity; i++)
-    hash_table->elements[i] = NULL;
+    hash_table->items[i] = NULL;
 
   return hash_table;
 }
@@ -30,22 +30,22 @@ struct hash_table_t *hash_table_create(size_t capacity, unsigned int (*hash_func
  */
 void hash_table_free(struct hash_table_t *hash_table)
 {
-  struct hash_table_element_t *elt, *next;
+  struct hash_table_item_t *elt, *next;
   size_t i;
 
   if (!hash_table)
     return;
 
-  if (hash_table->elements) {
+  if (hash_table->items) {
     for (i = 0; i < hash_table->capacity; i++) {
-      for (elt = hash_table->elements[i]; elt != NULL;) {
+      for (elt = hash_table->items[i]; elt != NULL;) {
         next = elt->next;
         free(elt);
         elt = next;
       }
     }
 
-    free(hash_table->elements);
+    free(hash_table->items);
   }
 
   free(hash_table);
@@ -56,7 +56,7 @@ void hash_table_free(struct hash_table_t *hash_table)
  */
 void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
 {
-  struct hash_table_element_t *elt;
+  struct hash_table_item_t *elt;
   unsigned int hash;
   void *ret;
 
@@ -67,7 +67,7 @@ void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
   hash = hash_table->hash_func(key) % hash_table->capacity;
 
   /* check if key is already present */
-  for (elt = hash_table->elements[hash]; elt != NULL; elt = elt->next) {
+  for (elt = hash_table->items[hash]; elt != NULL; elt = elt->next) {
     if (hash_table->equal_func(elt->key, key)) {
       ret = elt->data;
       elt->data = data;
@@ -75,12 +75,12 @@ void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
     }
   }
 
-  /* create new element */
-  elt = (struct hash_table_element_t *) xmalloc(sizeof(struct hash_table_element_t));
+  /* create new item */
+  elt = (struct hash_table_item_t *) xmalloc(sizeof(struct hash_table_item_t));
   elt->key = key;
   elt->data = data;
-  elt->next = hash_table->elements[hash];
-  hash_table->elements[hash] = elt;
+  elt->next = hash_table->items[hash];
+  hash_table->items[hash] = elt;
   hash_table->size++;
 
   return NULL;
@@ -91,7 +91,7 @@ void *hash_table_put(struct hash_table_t *hash_table, void *key, void *data)
  */
 void *hash_table_get(struct hash_table_t *hash_table, void *key)
 {
-  struct hash_table_element_t *elt;
+  struct hash_table_item_t *elt;
   unsigned int hash;
 
   if (!hash_table)
@@ -101,7 +101,7 @@ void *hash_table_get(struct hash_table_t *hash_table, void *key)
   hash = hash_table->hash_func(key) % hash_table->capacity;
 
   /* seach for key */
-  for (elt = hash_table->elements[hash]; elt != NULL; elt = elt->next)
+  for (elt = hash_table->items[hash]; elt != NULL; elt = elt->next)
     if (hash_table->equal_func(elt->key, key))
       return elt->data;
 
@@ -113,7 +113,7 @@ void *hash_table_get(struct hash_table_t *hash_table, void *key)
  */
 void *hash_table_remove(struct hash_table_t *hash_table, void *key)
 {
-  struct hash_table_element_t *elt, *prev;
+  struct hash_table_item_t *elt, *prev;
   unsigned int hash;
   void *ret;
 
@@ -124,14 +124,14 @@ void *hash_table_remove(struct hash_table_t *hash_table, void *key)
   hash = hash_table->hash_func(key) % hash_table->capacity;
 
   /* seach for key */
-  for (elt = hash_table->elements[hash], prev = NULL; elt != NULL; elt = elt->next) {
+  for (elt = hash_table->items[hash], prev = NULL; elt != NULL; elt = elt->next) {
     if (hash_table->equal_func(elt->key, key)) {
       ret = elt->data;
 
       if (prev)
         prev->next = elt->next;
       else
-        hash_table->elements[hash] = elt->next;
+        hash_table->items[hash] = elt->next;
 
       free(elt);
       hash_table->size--;

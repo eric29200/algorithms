@@ -3,16 +3,16 @@
 
 #include <stdio.h>
 
-struct hash_table_element_t {
+struct hash_table_item_t {
   void *key;
   void *data;
-  struct hash_table_element_t *next;
+  struct hash_table_item_t *next;
 };
 
 struct hash_table_t {
   size_t size;
   size_t capacity;
-  struct hash_table_element_t **elements;
+  struct hash_table_item_t **items;
   unsigned int (*hash_func)(const void *);
   int (*equal_func)(const void *, const void *);
 };

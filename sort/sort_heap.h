@@ -3,6 +3,6 @@
 
 #include <stdio.h>
 
-void sort_heap(void *data, int size, size_t element_size, int (*compare)(const void *, const void *));
+void sort_heap(void *data, int size, size_t item_size, int (*compare)(const void *, const void *));
 
 #endif

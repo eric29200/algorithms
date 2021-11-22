@@ -47,7 +47,7 @@ void queue_free_full(struct queue_t *queue, void (*free_func)(void *))
  */
 int queue_is_empty(struct queue_t *queue)
 {
-  return queue->head == NULL;
+  return queue && queue->head == NULL;
 }
 
 /*
@@ -72,7 +72,7 @@ struct queue_t *queue_copy(struct queue_t *queue)
 }
 
 /*
- * Find an element in a queue.
+ * Find an item in a queue.
  */
 struct list_t *queue_find(struct queue_t *queue, void *data)
 {
@@ -83,7 +83,7 @@ struct list_t *queue_find(struct queue_t *queue, void *data)
 }
 
 /*
- * Push an element at the head of a queue.
+ * Push an item at the head of a queue.
  */
 void queue_push_head(struct queue_t *queue, void *data)
 {
@@ -98,7 +98,7 @@ void queue_push_head(struct queue_t *queue, void *data)
 }
 
 /*
- * Push an element at the tail of a queue.
+ * Push an item at the tail of a queue.
  */
 void queue_push_tail(struct queue_t *queue, void *data)
 {
@@ -115,7 +115,7 @@ void queue_push_tail(struct queue_t *queue, void *data)
 }
 
 /*
- * Pop an element from the head of a queue.
+ * Pop an item from the head of a queue.
  */
 void *queue_pop_head(struct queue_t *queue)
 {
@@ -141,7 +141,7 @@ void *queue_pop_head(struct queue_t *queue)
 }
 
 /*
- * Pop an element from the tail of a queue.
+ * Pop an item from the tail of a queue.
  */
 void *queue_pop_tail(struct queue_t *queue)
 {

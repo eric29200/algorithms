@@ -75,5 +75,7 @@ int main()
   /* free graph */
   graph_free(graph);
 
+  printf("**************\n");
+
   return 0;
 }

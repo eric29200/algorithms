@@ -72,7 +72,7 @@ static struct tree_node_t *__tree_node_insert(struct tree_t *tree, struct tree_n
 }
 
 /*
- * Insert an element into a tree.
+ * Insert an item into a tree.
  */
 void tree_insert(struct tree_t *tree, void *data)
 {
@@ -103,7 +103,7 @@ static struct tree_node_t *__tree_node_find(struct tree_t *tree, struct tree_nod
 }
 
 /*
- * Find an element in a tree.
+ * Find an item in a tree.
  */
 struct tree_node_t *tree_find(struct tree_t *tree, void *data)
 {

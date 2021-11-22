@@ -4,7 +4,7 @@
 #include "../utils/mem.h"
 
 /*
- * Free all elements of a list.
+ * Free all items of a list.
  */
 void list_free(struct list_t *list)
 {
@@ -18,7 +18,7 @@ void list_free(struct list_t *list)
 }
 
 /*
- * Free all elements of a list.
+ * Free all items of a list.
  */
 void list_free_full(struct list_t *list, void (*free_func)(void *))
 {
@@ -33,16 +33,16 @@ void list_free_full(struct list_t *list, void (*free_func)(void *))
 }
 
 /*
- * Append an element at the end of a list.
+ * Append an item at the end of a list.
  */
 struct list_t *list_append(struct list_t *list, void *data)
 {
   struct list_t *new_list, *last;
 
-  /* allocate new element */
+  /* allocate new item */
   new_list = xmalloc(sizeof(struct list_t));
 
-  /* set new element */
+  /* set new item */
   new_list->data = data;
   new_list->next = NULL;
 
@@ -60,16 +60,16 @@ struct list_t *list_append(struct list_t *list, void *data)
 }
 
 /*
- * Prepend an element at the beginning of a list.
+ * Prepend an item at the beginning of a list.
  */
 struct list_t *list_prepend(struct list_t *list, void *data)
 {
   struct list_t *new_list;
 
-  /* allocate new element */
+  /* allocate new item */
   new_list = (struct list_t *) xmalloc(sizeof(struct list_t));
 
-  /* set new element */
+  /* set new item */
   new_list->data = data;
   new_list->next = list;
 
@@ -106,7 +106,7 @@ struct list_t *list_concat(struct list_t *list1, struct list_t *list2)
 }
 
 /*
- * Remove an element from a list (only remove first matching element).
+ * Remove an item from a list (only remove first matching item).
  */
 struct list_t *list_remove(struct list_t *list, void *data)
 {
@@ -137,7 +137,7 @@ struct list_t *list_remove(struct list_t *list, void *data)
 }
 
 /*
- * Remove all elements from a list.
+ * Remove all items from a list.
  */
 struct list_t *list_remove_all(struct list_t *list, void *data)
 {
@@ -189,7 +189,7 @@ struct list_t *list_copy(struct list_t *list)
 }
 
 /*
- * Find an element in a list.
+ * Find an item in a list.
  */
 struct list_t *list_find(struct list_t *list, void *data)
 {
@@ -204,7 +204,7 @@ struct list_t *list_find(struct list_t *list, void *data)
 }
 
 /*
- * Get the first element of a list.
+ * Get the first item of a list.
  */
 struct list_t *list_first(struct list_t *list)
 {
@@ -218,7 +218,7 @@ struct list_t *list_first(struct list_t *list)
 }
 
 /*
- * Get the last element of a list.
+ * Get the last item of a list.
  */
 struct list_t *list_last(struct list_t *list)
 {
@@ -290,7 +290,7 @@ struct list_t *list_sort(struct list_t *list, int (*compare_func)(const void *, 
       }
   }
 
-  /* l1 is just before the middle element */
+  /* l1 is just before the middle item */
   l2 = l1->next;
   l1->next = NULL;
   l1 = list;

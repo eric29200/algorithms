@@ -3,6 +3,6 @@
 
 #include <stdio.h>
 
-int search_sequential(void *data, int size, size_t element_size, void *key, int (*equal_func)(const void *, const void *));
+int search_sequential(void *data, int size, size_t item_size, void *key, int (*equal_func)(const void *, const void *));
 
 #endif

@@ -57,7 +57,7 @@ void heap_free_full(struct heap_t *heap, void (*free_func)(void *))
 }
 
 /*
- * Swap 2 elements of a heap.
+ * Swap 2 items of a heap.
  */
 static void __heap_swap(struct heap_t *heap, int i, int j)
 {
@@ -161,7 +161,7 @@ void *heap_min(struct heap_t *heap)
     return heap->data[0];
   }
 
-  /* extract root = minimum element */
+  /* extract root = minimum item */
   root = heap->data[0];
   heap->data[0] = heap->data[heap->size - 1];
   heap->size--;
@@ -187,7 +187,7 @@ void *heap_max(struct heap_t *heap)
     return heap->data[0];
   }
 
-  /* extract root = maximum element */
+  /* extract root = maximum item */
   root = heap->data[0];
   heap->data[0] = heap->data[heap->size - 1];
   heap->size--;

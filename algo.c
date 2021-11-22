@@ -2,33 +2,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "data_structures/priority_queue.h"
-
-static int compare_int(const void *a1, const void *a2)
-{
-  return *((int *) a1) - *((int *) a2);
-}
+#include "data_structures/graph.h"
 
 int main()
 {
-  struct priority_queue_t *pqueue;
-  int a = 1;
-  int b = 2;
-  int c = 3;
-  int d = 4;
+  struct graph_t *graph;
 
-  pqueue = priority_queue_create(4, compare_int);
+  /* create graph */
+  graph = graph_create();
 
-  priority_queue_push(pqueue, &d);
-  priority_queue_push(pqueue, &b);
-  priority_queue_push(pqueue, &c);
-  priority_queue_push(pqueue, &a);
+  /* create vertices */
+  graph_add_vertex(graph, "0");
+  graph_add_vertex(graph, "1");
+  graph_add_vertex(graph, "2");
+  graph_add_vertex(graph, "3");
+  graph_add_vertex(graph, "4");
+  graph_add_vertex(graph, "5");
+  graph_add_vertex(graph, "6");
+  graph_add_vertex(graph, "7");
+  graph_add_vertex(graph, "8");
 
-  printf("%d\n", *((int *) priority_queue_pop(pqueue)));
-  printf("%d\n", *((int *) priority_queue_pop(pqueue)));
-  printf("%d\n", *((int *) priority_queue_pop(pqueue)));
-  printf("%d\n", *((int *) priority_queue_pop(pqueue)));
+  /* create edges */
+  graph_add_edge(graph, 0, 1, 4);
+  graph_add_edge(graph, 0, 7, 8);
+  graph_add_edge(graph, 1, 0, 4);
+  graph_add_edge(graph, 1, 2, 8);
+  graph_add_edge(graph, 1, 7, 11);
+  graph_add_edge(graph, 2, 1, 8);
+  graph_add_edge(graph, 2, 3, 7);
+  graph_add_edge(graph, 2, 5, 4);
+  graph_add_edge(graph, 2, 8, 2);
+  graph_add_edge(graph, 3, 2, 7);
+  graph_add_edge(graph, 3, 4, 9);
+  graph_add_edge(graph, 3, 5, 14);
+  graph_add_edge(graph, 4, 3, 9);
+  graph_add_edge(graph, 4, 5, 10);
+  graph_add_edge(graph, 5, 2, 4);
+  graph_add_edge(graph, 5, 3, 14);
+  graph_add_edge(graph, 5, 4, 10);
+  graph_add_edge(graph, 5, 6, 2);
+  graph_add_edge(graph, 6, 5, 2);
+  graph_add_edge(graph, 6, 7, 1);
+  graph_add_edge(graph, 6, 8, 6);
+  graph_add_edge(graph, 7, 0, 8);
+  graph_add_edge(graph, 7, 1, 11);
+  graph_add_edge(graph, 7, 6, 1);
+  graph_add_edge(graph, 7, 8, 7);
+  graph_add_edge(graph, 8, 2, 2);
+  graph_add_edge(graph, 8, 6, 6);
+  graph_add_edge(graph, 8, 7, 7);
 
-  priority_queue_free(pqueue);
+  /* compute shortest path */
+  graph_djikstra(graph, 0, 4);
+
+  /* free graph */
+  graph_free(graph);
+
   return 0;
 }

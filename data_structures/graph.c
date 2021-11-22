@@ -3,6 +3,7 @@
 
 #include "graph.h"
 #include "queue.h"
+#include "priority_queue.h"
 #include "../utils/mem.h"
 
 /*
@@ -68,6 +69,9 @@ void graph_add_vertex(struct graph_t *graph, const char *label)
   vertex->id = graph->size;
   vertex->label = label ? xstrdup(label) : NULL;
   vertex->visited = 0;
+  vertex->weight = 0;
+  vertex->prev = NULL;
+  vertex->next = NULL;
   vertex->edges = NULL;
 
   /* add it to graph */
@@ -80,7 +84,7 @@ void graph_add_vertex(struct graph_t *graph, const char *label)
 /*
  * Add an edge to a graph (= connect 2 vertices.
  */
-void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
+void graph_add_edge(struct graph_t *graph, size_t src, size_t dst, int weight)
 {
   struct graph_edge_t *edge;
 
@@ -90,6 +94,7 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst)
   /* create new edge */
   edge = (struct graph_edge_t *) xmalloc(sizeof(struct graph_edge_t));
   edge->dst = graph->vertices[dst];
+  edge->weight = weight;
 
   /* add it at the begining of src edges */
   graph->vertices[src]->edges = list_prepend(graph->vertices[src]->edges, edge);
@@ -178,4 +183,85 @@ void graph_bfs(struct graph_t *graph)
 
   /* free queue */
   queue_free(queue);
+}
+
+/*
+ * Compare 2 vertices.
+ */
+static int compare_vertices(const void *a1, const void *a2)
+{
+  return ((struct graph_vertex_t *) a1)->weight - ((struct graph_vertex_t *) a2)->weight;
+}
+
+/*
+ * Djikstra algorithm.
+ */
+void graph_djikstra(struct graph_t *graph, size_t src, size_t dst)
+{
+  struct graph_vertex_t *vertex, *dst_vertex, *src_vertex;
+  struct priority_queue_t *pqueue;
+  struct graph_edge_t *edge;
+  struct list_t *it;
+  size_t i;
+
+  if (!graph || src > graph->size || dst > graph->size)
+    return;
+
+  /* unmark all vertices */
+  for (i = 0; i < graph->size; i++) {
+    graph->vertices[i]->visited = 0;
+    graph->vertices[i]->weight = 0;
+    graph->vertices[i]->prev = NULL;
+    graph->vertices[i]->next = NULL;
+  }
+
+  /* create priority queue */
+  pqueue = priority_queue_create(graph->size, compare_vertices);
+
+  /* enqueue first vertex */
+  graph->vertices[0]->visited = 1;
+  priority_queue_push(pqueue, graph->vertices[0]);
+
+  /* loop until priority queue is empty */
+  for (vertex = NULL; !priority_queue_is_empty(pqueue);) {
+    /* get next vertex */
+    vertex = (struct graph_vertex_t *) priority_queue_pop(pqueue);
+
+    /* end of algorithm */
+    if (vertex->id == dst)
+      break;
+
+    /* add all adjacent vertices (if not already visited) */
+    for (it = vertex->edges; it != NULL; it = it->next) {
+      edge = (struct graph_edge_t *) it->data;
+      if (graph->vertices[edge->dst->id]->visited == 0) {
+        edge->dst->visited = 1;
+        edge->dst->weight = vertex->weight + edge->weight;
+        edge->dst->prev = vertex;
+        priority_queue_push(pqueue, edge->dst);
+      }
+    }
+  }
+
+  /* no solution */
+  if (!vertex || vertex->id != dst)
+    goto out;
+
+  /* resolve path from src to dst */
+  dst_vertex = vertex;
+  for (src_vertex = NULL; vertex != NULL; vertex = vertex->prev) {
+    vertex->next = src_vertex;
+    src_vertex = vertex;
+  }
+
+  /* print solution */
+  printf("Shortest path from %s to %s = %d : ", src_vertex->label, dst_vertex->label, dst_vertex->weight);
+  printf("%s", src_vertex->label);
+  for (vertex = src_vertex->next; vertex != NULL; vertex = vertex->next)
+    printf(" -> %s", vertex->label);
+  printf("\n");
+
+out:
+  /* free priority queue */
+  priority_queue_free(pqueue);
 }

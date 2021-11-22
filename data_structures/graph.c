@@ -234,11 +234,20 @@ void graph_djikstra(struct graph_t *graph, size_t src, size_t dst)
     /* add all adjacent vertices (if not already visited) */
     for (it = vertex->edges; it != NULL; it = it->next) {
       edge = (struct graph_edge_t *) it->data;
-      if (graph->vertices[edge->dst->id]->visited == 0) {
+
+      /* add adjacent vertex if not visited */
+      if (edge->dst->visited == 0) {
         edge->dst->visited = 1;
         edge->dst->weight = vertex->weight + edge->weight;
         edge->dst->prev = vertex;
         priority_queue_push(pqueue, edge->dst);
+        continue;
+      }
+
+      /* if adjacent vertex is already visited but current path is better, update weight and path */
+      if (vertex->weight + edge->weight < edge->dst->weight) {
+        edge->dst->weight = vertex->weight + edge->weight;
+        edge->dst->prev = vertex;
       }
     }
   }

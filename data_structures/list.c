@@ -86,6 +86,50 @@ struct list_t *list_prepend(struct list_t *list, void *data)
 }
 
 /*
+ * Insert an item after position.
+ */
+struct list_t *list_insert_after(struct list_t *list, struct list_t *pos, void *data)
+{
+  struct list_t *new_item;
+
+  if (!list || !pos)
+    return list;
+
+  /* allocate new item */
+  new_item = (struct list_t *) xmalloc(sizeof(struct list_t));
+  new_item->data = data;
+  new_item->prev = pos;
+  new_item->next = pos->next;
+  pos->next = new_item;
+
+  return list;
+}
+
+/*
+ * Insert an item before position.
+ */
+struct list_t *list_insert_before(struct list_t *list, struct list_t *pos, void *data)
+{
+  struct list_t *new_item;
+
+  if (!list || !pos)
+    return list;
+
+  /* allocate new item */
+  new_item = (struct list_t *) xmalloc(sizeof(struct list_t));
+  new_item->data = data;
+  new_item->prev = pos->prev;
+  new_item->next = pos;
+  pos->prev = new_item;
+
+  /* update list */
+  if (!new_item->prev)
+    list = new_item;
+
+  return list;
+}
+
+/*
  * Concatenate 2 lists.
  */
 struct list_t *list_concat(struct list_t *list1, struct list_t *list2)

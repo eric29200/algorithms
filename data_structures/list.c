@@ -276,6 +276,29 @@ struct list_t *list_last(struct list_t *list)
 }
 
 /*
+ * Get middle item of a list.
+ */
+struct list_t *list_middle(struct list_t *list)
+{
+  struct list_t *l1, *l2;
+
+  if (!list)
+    return NULL;
+
+  /* l2 moves forward 2 times faster than l1 */
+  for (l1 = list, l2 = list->next; l2 != NULL;) {
+    l2 = l2->next;
+    if (l2) {
+        l1 = l1->next;
+        l2 = l2->next;
+      }
+  }
+
+  return l1;
+}
+
+
+/*
  * Get the length of a list.
  */
 size_t list_length(struct list_t *list)
@@ -325,14 +348,8 @@ struct list_t *list_sort(struct list_t *list, int (*compare_func)(const void *, 
   if (!list || !list->next)
     return list;
 
-  /* split the list in 2 (l2 moves forward 2 times faster than l1) */
-  for (l1 = list, l2 = list->next; l2 != NULL;) {
-    l2 = l2->next;
-    if (l2) {
-        l1 = l1->next;
-        l2 = l2->next;
-      }
-  }
+  /* get middle element */
+  l1 = list_middle(list);
 
   /* l1 is just before the middle item */
   l2 = l1->next;

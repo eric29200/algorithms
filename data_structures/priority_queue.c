@@ -63,7 +63,7 @@ void priority_queue_push(struct priority_queue_t *pqueue, void *data)
 
   /* find position */
   for (it = pqueue->head, prev = NULL; it != NULL; it = it->next) {
-    if (pqueue->compare_func(it->data, data) > 0)
+    if (pqueue->compare_func(it->data, data) >= 0)
       break;
 
     prev = it;

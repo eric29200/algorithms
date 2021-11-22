@@ -20,9 +20,8 @@ static inline void swap(void *e1, void *e2, void *tmp, size_t item_size)
  */
 void sort_bubble(void *data, int size, size_t item_size, int (*compare)(const void *, const void *))
 {
-  char change = 1;
   void *tmp;
-  int i;
+  int i, j;
 
   /* check input array */
   if (!data || size == 0 || item_size < 2)
@@ -31,18 +30,11 @@ void sort_bubble(void *data, int size, size_t item_size, int (*compare)(const vo
   /* allocate tmp */
   tmp = xmalloc(item_size);
 
-  /* compute until no changes occur */
-  while (change) {
-    change = 0;
-
-    /* swap items 2 by 2 */
-    for (i = 1; i < size; i++) {
-      if (compare(data + (i - 1) * item_size, data + i * item_size) > 0) {
-        swap(data + (i - 1) * item_size, data + i * item_size, tmp, item_size);
-        change = 1;
-      }
-    }
-  }
+  /* bubble sort */
+  for (i = 0; i < size; i++)
+    for (j = 0; j < size; j++)
+      if (compare(data + i * item_size, data + j * item_size) < 0)
+        swap(data + i * item_size, data + j * item_size, tmp, item_size);
 
   /* free tmp */
   free(tmp);

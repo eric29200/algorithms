@@ -55,6 +55,9 @@ int main()
   /* compute shortest path */
   graph_djikstra(graph, 0, 4);
 
+  /* compute distances matrix */
+  graph_floyd_warshall(graph);
+
   /* free graph */
   graph_free(graph);
 

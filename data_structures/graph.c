@@ -6,6 +6,8 @@
 #include "priority_queue.h"
 #include "../utils/mem.h"
 
+#define DISTANCE_INFINITE       (__INT16_MAX__)
+
 /*
  * Create a graph.
  */
@@ -273,4 +275,62 @@ void graph_djikstra(struct graph_t *graph, size_t src, size_t dst)
 out:
   /* free priority queue */
   priority_queue_free(pqueue);
+}
+
+/*
+ * Floyd warshall algorithm (compute shortest paths from/to all vertices).
+ */
+void graph_floyd_warshall(struct graph_t *graph)
+{
+  struct graph_edge_t *edge;
+  int **distances, dist;
+  struct list_t *it;
+  size_t i, j, k;
+
+  if (!graph || graph->size == 0)
+    return;
+
+  /* create and init distances matrix */
+  distances = (int **) xmalloc(sizeof(int *) * graph->size);
+  for (i = 0; i < graph->size; i++) {
+    distances[i] = (int *) xmalloc(sizeof(int) * graph->size);
+
+    /* set distances to infinity */
+    for (j = 0; j < graph->size; j++)
+      distances[i][j] = DISTANCE_INFINITE;
+
+    /* set distance to himself */
+    distances[i][i] = 0;
+
+    /* set distance to neighbours */
+    for (it = graph->vertices[i]->edges; it != NULL; it = it->next) {
+      edge = (struct graph_edge_t *) it->data;
+      distances[i][edge->dst->id] = edge->weight;
+    }
+  }
+
+  for (i = 0; i < graph->size; i++) {
+    for (j = 0; j < graph->size; j++) {
+      for (k = 0; k < graph->size; k++) {
+        /* update distance if better */
+        dist = distances[j][i] + distances[i][k];
+        if (dist < distances[j][k])
+          distances[j][k] = dist;
+      }
+    }
+  }
+
+
+  /* print distances matrix */
+  for (i = 0; i < graph->size; i++) {
+    for (j = 0; j < graph->size; j++)
+      printf(" %d\t|", distances[i][j] == DISTANCE_INFINITE ? -1 : distances[i][j]);
+
+    printf("\n");
+  }
+
+  /* free distances matrix */
+  for (i = 0; i < graph->size; i++)
+    free(distances[i]);
+  free(distances);
 }

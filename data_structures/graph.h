@@ -31,5 +31,6 @@ void graph_add_edge(struct graph_t *graph, size_t src, size_t dst, int weight);
 void graph_dfs(struct graph_t *graph);
 void graph_bfs(struct graph_t *graph);
 void graph_djikstra(struct graph_t *graph, size_t src, size_t dst);
+void graph_floyd_warshall(struct graph_t *graph);
 
 #endif

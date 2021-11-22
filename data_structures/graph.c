@@ -219,13 +219,13 @@ void graph_djikstra(struct graph_t *graph, size_t src, size_t dst)
   pqueue = priority_queue_create(graph->size, compare_vertices);
 
   /* enqueue first vertex */
-  graph->vertices[0]->visited = 1;
   priority_queue_push(pqueue, graph->vertices[0]);
 
   /* loop until priority queue is empty */
   for (vertex = NULL; !priority_queue_is_empty(pqueue);) {
     /* get next vertex */
     vertex = (struct graph_vertex_t *) priority_queue_pop(pqueue);
+    vertex->visited = 1;
 
     /* end of algorithm */
     if (vertex->id == dst)
@@ -235,7 +235,6 @@ void graph_djikstra(struct graph_t *graph, size_t src, size_t dst)
     for (it = vertex->edges; it != NULL; it = it->next) {
       edge = (struct graph_edge_t *) it->data;
       if (graph->vertices[edge->dst->id]->visited == 0) {
-        edge->dst->visited = 1;
         edge->dst->weight = vertex->weight + edge->weight;
         edge->dst->prev = vertex;
         priority_queue_push(pqueue, edge->dst);

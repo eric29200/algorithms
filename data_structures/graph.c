@@ -313,7 +313,8 @@ void graph_floyd_warshall(struct graph_t *graph)
     for (j = 0; j < graph->size; j++) {
       for (k = 0; k < graph->size; k++) {
         /* update distance if better */
-        dist = distances[j][i] + distances[i][k];
+        dist = distances[j][i] == DISTANCE_INFINITE || distances[i][k] == DISTANCE_INFINITE
+          ? DISTANCE_INFINITE : distances[j][i] + distances[i][k];
         if (dist < distances[j][k])
           distances[j][k] = dist;
       }

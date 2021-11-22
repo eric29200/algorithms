@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,7 +17,7 @@ int main()
   int c = 3;
   int d = 4;
 
-  pqueue = priority_queue_create(compare_int);
+  pqueue = priority_queue_create(4, compare_int);
 
   priority_queue_push(pqueue, &d);
   priority_queue_push(pqueue, &b);

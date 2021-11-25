@@ -9,7 +9,8 @@ algo: compression/huffman.o compression/lz77.o compression/lz78.o \
       data_structures/priority_queue.o \
       sort/sort_bubble.o sort/sort_insertion.o sort/sort_heap.o sort/sort_quick.o sort/sort_merge.o \
       search/search_sequential.o search/search_binary.o \
-      utils/mem.o \
+      geometry/geometry.o geometry/wkb_reader.o \
+      utils/mem.o utils/math.o \
       plot/plot.o \
       stats/kmeans.o \
       algo.o

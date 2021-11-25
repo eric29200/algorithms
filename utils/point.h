@@ -6,7 +6,6 @@
 struct point_t {
   double x;
   double y;
-  int cluster_id;
 };
 
 #endif

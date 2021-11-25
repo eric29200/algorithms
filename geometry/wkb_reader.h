@@ -12,6 +12,6 @@
 
 #define ERRWKB                -1
 
-struct geometry_t *wkb_read_geometry(FILE *fp);
+struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len);
 
 #endif

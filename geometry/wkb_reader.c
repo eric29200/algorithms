@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "wkb_reader.h"
 #include "../utils/mem.h"
 #include "../utils/math.h"
@@ -5,13 +7,13 @@
 /*
  * Read WKB points.
  */
-static int wkb_read_points(FILE *fp, struct point_t *points, size_t nb_points)
+static int wkb_read_points(void *wkb, size_t *wkb_len, struct point_t *points, size_t nb_points)
 {
   size_t i;
 
   /* read points */
-  if (fread(points, sizeof(struct point_t), nb_points, fp) != nb_points)
-    return ERRWKB;
+  memcpy(points, wkb + *wkb_len, sizeof(struct point_t) * nb_points);
+  *wkb_len += sizeof(struct point_t) * nb_points;
 
   /* convert IEEE754 to host */
   for (i = 0; i < nb_points; i++) {
@@ -25,43 +27,37 @@ static int wkb_read_points(FILE *fp, struct point_t *points, size_t nb_points)
 /*
  * Read WKB ring.
  */
-static int wkb_read_ring(FILE *fp, struct ring_t *ring, char endian)
+static int wkb_read_ring(void *wkb, size_t *wkb_len, struct ring_t *ring, char endian)
 {
   /* read number of points */
-  if (fread(&ring->nb_points, sizeof(int), 1, fp) != 1)
-    return ERRWKB;
-
-  /* convert endianess */
-  ring->nb_points = WKB_ENDIAN(ring->nb_points, endian);
+  ring->nb_points = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
 
   /* allocate points */
   ring->points = (struct point_t *) xmalloc(sizeof(struct point_t) * ring->nb_points);
 
   /* read points */
-  return wkb_read_points(fp, ring->points, ring->nb_points);
+  return wkb_read_points(wkb, wkb_len, ring->points, ring->nb_points);
 }
 
 /*
  * Read WKB polygon.
  */
-static int wkb_read_polygon(FILE *fp, struct polygon_t *polygon, char endian)
+static int wkb_read_polygon(void *wkb, size_t *wkb_len, struct polygon_t *polygon, char endian)
 {
   size_t i;
   int ret;
 
   /* read number of rings */
-  if (fread(&polygon->nb_rings, sizeof(int), 1, fp) != 1)
-    return ERRWKB;
-
-  /* convert endianess */
-  polygon->nb_rings = WKB_ENDIAN(polygon->nb_rings, endian);
+  polygon->nb_rings = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
 
   /* allocate rings */
   polygon->rings = (struct ring_t *) xmalloc(sizeof(struct ring_t) * polygon->nb_rings);
 
   /* read rings */
   for (i = 0; i < polygon->nb_rings; i++) {
-    ret = wkb_read_ring(fp, &polygon->rings[i], endian);
+    ret = wkb_read_ring(wkb, wkb_len, &polygon->rings[i], endian);
     if (ret != 0)
       return ret;
   }
@@ -72,18 +68,15 @@ static int wkb_read_polygon(FILE *fp, struct polygon_t *polygon, char endian)
 /*
  * Read WKB multi polygon.
  */
-static int wkb_read_multipolygon(FILE *fp, struct multi_polygon_t *multi_polygon, char endian)
+static int wkb_read_multipolygon(void *wkb, size_t *wkb_len, struct multi_polygon_t *multi_polygon, char endian)
 {
-  int ret, geometry_type;
+  int geometry_type, ret;
   char polygon_endian;
   size_t i;
 
   /* read number of polygons */
-  if (fread(&multi_polygon->nb_polygons, sizeof(int), 1, fp) != 1)
-    return ERRWKB;
-
-  /* convert endianess */
-  multi_polygon->nb_polygons = WKB_ENDIAN(multi_polygon->nb_polygons, endian);
+  multi_polygon->nb_polygons = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
 
   /* allocate polygons */
   multi_polygon->polygons = (struct polygon_t *) xmalloc(sizeof(struct polygon_t) * multi_polygon->nb_polygons);
@@ -91,22 +84,19 @@ static int wkb_read_multipolygon(FILE *fp, struct multi_polygon_t *multi_polygon
   /* read polygons */
   for (i = 0; i < multi_polygon->nb_polygons; i++) {
     /* read byte order */
-    if (fread(&polygon_endian, sizeof(char), 1, fp) != 1)
-      return ERRWKB;
+    polygon_endian = *((char *) (wkb + *wkb_len));
+    *wkb_len += sizeof(char);
 
     /* read geometry type */
-    if (fread(&geometry_type, sizeof(int), 1, fp) != 1)
-      return ERRWKB;
-
-    /* convert endianess */
-    geometry_type = WKB_ENDIAN(geometry_type, polygon_endian);
+    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), polygon_endian);
+    *wkb_len += sizeof(int);
 
     /* geometry must be a polygon */
     if (geometry_type != GEOMETRY_POLYGON)
       return ERRWKB;
 
     /* read polygon */
-    ret = wkb_read_polygon(fp, &multi_polygon->polygons[i], polygon_endian);
+    ret = wkb_read_polygon(wkb, wkb_len, &multi_polygon->polygons[i], polygon_endian);
     if (ret != 0)
       return ret;
   }
@@ -117,33 +107,33 @@ static int wkb_read_multipolygon(FILE *fp, struct multi_polygon_t *multi_polygon
 /*
  * Read and create WKB geometry.
  */
-struct geometry_t *wkb_read_geometry(FILE *fp)
+struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len)
 {
   struct geometry_t *geometry;
   char endian;
+
+  /* reset wkb length */
+  *wkb_len = 0;
 
   /* allocate geometry */
   geometry = (struct geometry_t *) xmalloc(sizeof(struct geometry_t));
 
   /* read byte order */
-  if (fread(&endian, sizeof(char), 1, fp) != 1)
-    goto err;
+  endian = *((char *) (wkb + *wkb_len));
+  *wkb_len += sizeof(char);
 
   /* read geometry type */
-  if (fread(&geometry->type, sizeof(int), 1, fp) != 1)
-    goto err;
-
-  /* convert endianess */
-  geometry->type = WKB_ENDIAN(geometry->type, endian);
+  geometry->type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
 
   /* get type definition */
   switch (geometry->type) {
     case GEOMETRY_POLYGON:
-      if (wkb_read_polygon(fp, &geometry->u.polygon, endian) != 0)
+      if (wkb_read_polygon(wkb, wkb_len, &geometry->u.polygon, endian) != 0)
         goto err;
       break;
     case GEOMETRY_MULTIPOLYGON:
-      if (wkb_read_multipolygon(fp, &geometry->u.multi_polygon, endian) != 0)
+      if (wkb_read_multipolygon(wkb, wkb_len, &geometry->u.multi_polygon, endian) != 0)
         goto err;
       break;
     default:
@@ -152,6 +142,7 @@ struct geometry_t *wkb_read_geometry(FILE *fp)
 
   return geometry;
 err:
+  geometry_free(geometry);
   return NULL;
 }
 

@@ -25,6 +25,22 @@ static int wkb_read_points(void *wkb, size_t *wkb_len, struct point_t *points, s
 }
 
 /*
+ * Read WKB line string.
+ */
+static int wkb_read_line_string(void *wkb, size_t *wkb_len, struct line_string_t *line_string, char endian)
+{
+  /* read number of points */
+  line_string->nb_points = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
+
+  /* allocate points */
+  line_string->points = (struct point_t *) xmalloc(sizeof(struct point_t) * line_string->nb_points);
+
+  /* read points */
+  return wkb_read_points(wkb, wkb_len, line_string->points, line_string->nb_points);
+}
+
+/*
  * Read WKB ring.
  */
 static int wkb_read_ring(void *wkb, size_t *wkb_len, struct ring_t *ring, char endian)
@@ -128,6 +144,14 @@ struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len)
 
   /* get type definition */
   switch (geometry->type) {
+    case GEOMETRY_POINT:
+      if (wkb_read_points(wkb, wkb_len, &geometry->u.point, 1) != 0)
+        goto err;
+      break;
+    case GEOMETRY_LINE_STRING:
+      if (wkb_read_line_string(wkb, wkb_len, &geometry->u.line_string, endian) != 0)
+        goto err;
+      break;
     case GEOMETRY_POLYGON:
       if (wkb_read_polygon(wkb, wkb_len, &geometry->u.polygon, endian) != 0)
         goto err;

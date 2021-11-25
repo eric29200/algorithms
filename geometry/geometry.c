@@ -2,6 +2,17 @@
 #include "../utils/mem.h"
 
 /*
+ * Free a line string.
+ */
+static void line_string_free(struct line_string_t *line_string)
+{
+  if (!line_string)
+    return;
+
+  xfree(line_string->points);
+}
+
+/*
  * Free a linear ring.
  */
 static void ring_free(struct ring_t *ring)
@@ -53,11 +64,16 @@ void geometry_free(struct geometry_t *geometry)
     return;
 
   switch (geometry->type) {
+    case GEOMETRY_LINE_STRING:
+    line_string_free(&geometry->u.line_string);
+      break;
     case GEOMETRY_POLYGON:
       polygon_free(&geometry->u.polygon);
       break;
     case GEOMETRY_MULTIPOLYGON:
       multi_polygon_free(&geometry->u.multi_polygon);
+      break;
+    default:
       break;
   }
 

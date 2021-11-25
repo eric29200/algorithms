@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "../utils/point.h"
+#include "../geometry/geometry.h"
 
 #define DATASET_FILE_PATTERN      "/tmp/gnuplot-XXXXXX"
 #define DATASET_FILE_LEN          64

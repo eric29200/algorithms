@@ -82,9 +82,89 @@ static int wkb_read_polygon(void *wkb, size_t *wkb_len, struct polygon_t *polygo
 }
 
 /*
+ * Read WKB multi point.
+ */
+static int wkb_read_multi_point(void *wkb, size_t *wkb_len, struct multi_point_t *multi_point, char endian)
+{
+  int geometry_type, ret;
+  char point_endian;
+  size_t i;
+
+  /* read number of points */
+  multi_point->nb_points = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
+
+  /* allocate points */
+  multi_point->points = (struct point_t *) xmalloc(sizeof(struct point_t) * multi_point->nb_points);
+
+  /* read points */
+  for (i = 0; i < multi_point->nb_points; i++) {
+    /* read byte order */
+    point_endian = *((char *) (wkb + *wkb_len));
+    *wkb_len += sizeof(char);
+
+    /* read geometry type */
+    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), point_endian);
+    *wkb_len += sizeof(int);
+
+    /* geometry must be a point */
+    if (geometry_type != GEOMETRY_POINT)
+      return ERRWKB;
+
+    /* read point */
+    ret = wkb_read_points(wkb, wkb_len, &multi_point->points[i], 1);
+    if (ret != 0)
+      return ret;
+  }
+
+  return 0;
+}
+
+/*
+ * Read WKB multi line string.
+ */
+static int wkb_read_multi_line_string(void *wkb, size_t *wkb_len, struct multi_line_string_t *multi_line_string,
+                                      char endian)
+{
+  int geometry_type, ret;
+  char ls_endian;
+  size_t i;
+
+  /* read number of line strings */
+  multi_line_string->nb_line_strings = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
+  *wkb_len += sizeof(int);
+
+  /* allocate line strings */
+  multi_line_string->line_strings = (struct line_string_t *) xmalloc(sizeof(struct line_string_t)
+                                                                     * multi_line_string->nb_line_strings);
+
+  /* read line strings */
+  for (i = 0; i < multi_line_string->nb_line_strings; i++) {
+    /* read byte order */
+    ls_endian = *((char *) (wkb + *wkb_len));
+    *wkb_len += sizeof(char);
+
+    /* read geometry type */
+    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), ls_endian);
+    *wkb_len += sizeof(int);
+
+    /* geometry must be a line string */
+    if (geometry_type != GEOMETRY_LINE_STRING)
+      return ERRWKB;
+
+    /* read line string */
+    ret = wkb_read_line_string(wkb, wkb_len, &multi_line_string->line_strings[i], ls_endian);
+    if (ret != 0)
+      return ret;
+  }
+
+  return 0;
+}
+
+/*
  * Read WKB multi polygon.
  */
-static int wkb_read_multipolygon(void *wkb, size_t *wkb_len, struct multi_polygon_t *multi_polygon, char endian)
+static int wkb_read_multi_polygon(void *wkb, size_t *wkb_len, struct multi_polygon_t *multi_polygon, char endian)
 {
   int geometry_type, ret;
   char polygon_endian;
@@ -156,8 +236,16 @@ struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len)
       if (wkb_read_polygon(wkb, wkb_len, &geometry->u.polygon, endian) != 0)
         goto err;
       break;
-    case GEOMETRY_MULTIPOLYGON:
-      if (wkb_read_multipolygon(wkb, wkb_len, &geometry->u.multi_polygon, endian) != 0)
+    case GEOMETRY_MULTI_POINT:
+      if (wkb_read_multi_point(wkb, wkb_len, &geometry->u.multi_point, endian) != 0)
+        goto err;
+      break;
+    case GEOMETRY_MULTI_LINE_STRING:
+      if (wkb_read_multi_line_string(wkb, wkb_len, &geometry->u.multi_line_string, endian) != 0)
+        goto err;
+      break;
+    case GEOMETRY_MULTI_POLYGON:
+      if (wkb_read_multi_polygon(wkb, wkb_len, &geometry->u.multi_polygon, endian) != 0)
         goto err;
       break;
     default:

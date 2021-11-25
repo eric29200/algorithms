@@ -3,10 +3,12 @@
 
 #include <stdio.h>
 
-#define GEOMETRY_POINT             1
-#define GEOMETRY_LINE_STRING       2
-#define GEOMETRY_POLYGON           3
-#define GEOMETRY_MULTIPOLYGON      6
+#define GEOMETRY_POINT              1
+#define GEOMETRY_LINE_STRING        2
+#define GEOMETRY_POLYGON            3
+#define GEOMETRY_MULTI_POINT        4
+#define GEOMETRY_MULTI_LINE_STRING  5
+#define GEOMETRY_MULTI_POLYGON      6
 
 /*
  * Point structure.
@@ -17,11 +19,27 @@ struct point_t {
 };
 
 /*
+ * Multi points structure.
+ */
+struct multi_point_t {
+  struct point_t *points;
+  size_t nb_points;
+};
+
+/*
  * Line string structure.
  */
 struct line_string_t {
   struct point_t *points;
   size_t nb_points;
+};
+
+/*
+ * Multi line strings structure.
+ */
+struct multi_line_string_t {
+  struct line_string_t *line_strings;
+  size_t nb_line_strings;
 };
 
 /*
@@ -57,6 +75,8 @@ struct geometry_t {
     struct point_t point;
     struct line_string_t line_string;
     struct polygon_t polygon;
+    struct multi_point_t multi_point;
+    struct multi_line_string_t multi_line_string;
     struct multi_polygon_t multi_polygon;
   } u;
 };

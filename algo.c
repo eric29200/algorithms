@@ -6,25 +6,28 @@
 #include "utils/mem.h"
 
 #define INPUT_FILE            "/home/eric/data.wkb"
-#define NB_TESTS              1000
+#define NB_TESTS              10000000
 
 /*
- * Main.
+ * Read geometries.
  */
-int main()
+struct geometry_t **geometries_read(size_t *nb_geometries)
 {
-  struct list_t *geometries = NULL, *it;
+  struct list_t *geometries_list = NULL, *it;
+  struct geometry_t **geometries = NULL;
+  size_t file_size, wkb_len, len, i;
   struct geometry_t *geometry;
-  size_t file_size, wkb_len, i;
-  struct point_t point;
-  char *buf, *buf_ptr;
+  char *buf;
   FILE *fp;
+
+  /* reset number of geometries */
+  *nb_geometries = 0;
 
   /* open input file */
   fp = fopen(INPUT_FILE, "rb");
   if (!fp) {
     perror("fopen");
-    return -1;
+    return NULL;
   }
 
   /* get file length */
@@ -45,37 +48,64 @@ int main()
   buf[file_size] = 0;
 
   /* read geometries */
-  for (buf_ptr = buf, geometries = NULL; ; buf_ptr += wkb_len) {
+  for (len = 0, geometries_list = NULL; len < file_size; len += wkb_len, *nb_geometries += 1) {
     /* read geometry */
-    geometry = wkb_read_geometry(buf_ptr, &wkb_len);
+    geometry = wkb_read_geometry(buf + len, &wkb_len);
     if (!geometry)
-      break;
+      goto out;
 
     /* add geometry */
-    geometries = list_append(geometries, geometry);
+    geometries_list = list_append(geometries_list, geometry);
   }
 
-  /* create point */
-  point.x = -5.004;
-  point.y = 48.198;
-
-  /* get geometries containing point */
-  for (i = 0; i < NB_TESTS; i++) {
-    for (it = geometries; it != NULL; it = it->next) {
-      geometry = (struct geometry_t *) it->data;
-      geometry_contains(geometry, &point);
-    }
-  }
+  /* convert list to array */
+  geometries = (struct geometry_t **) xmalloc(sizeof(struct geometry_t *) * *nb_geometries);
+  for (i = 0, it = geometries_list; i < *nb_geometries; i++, it = it->next)
+    geometries[i] = (struct geometry_t *) it->data;
 
 out:
   /* free geometries */
-  list_free_full(geometries, (void (*)) geometry_free);
+  list_free(geometries_list);
 
   /* free buffer */
   free(buf);
 
   /* close input file */
   fclose(fp);
+
+  return geometries;
+}
+
+/*
+ * Main.
+ */
+int main()
+{
+  struct geometry_t **geometries;
+  size_t nb_geometries, i, j;
+  struct point_t point;
+
+  /* read geometries */
+  geometries = geometries_read(&nb_geometries);
+  if (!geometries)
+    return -1;
+
+  /* create point */
+  point.x = -5.004;
+  point.y = 48.198;
+
+  /* get geometries containing point */
+  for (i = 0; i < NB_TESTS; i++)
+    for (j = 0; j < nb_geometries; j++)
+      geometry_contains(geometries[j], &point);
+
+  /* free geometries */
+  if (geometries) {
+    for (i = 0; i < nb_geometries; i++)
+      geometry_free(geometries[i]);
+
+    free(geometries);
+  }
 
   return 0;
 }

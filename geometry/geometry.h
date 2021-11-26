@@ -81,6 +81,12 @@ struct geometry_t {
   } u;
 };
 
+struct geometry_t *point_create(double x, double y);
+struct geometry_t *line_string_create(struct point_t *points, size_t nb_points);
+struct geometry_t *polygon_create(struct ring_t *rings, size_t nb_rings);
+struct geometry_t *multi_point_create(struct point_t *points, size_t nb_points);
+struct geometry_t *multi_line_string_create(struct line_string_t *line_strings, size_t nb_line_strings);
+struct geometry_t *multi_polygon_create(struct polygon_t *polygons, size_t nb_polygons);
 void geometry_free(struct geometry_t *geometry);
 
 #endif

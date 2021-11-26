@@ -1,5 +1,119 @@
+#include <string.h>
+
 #include "geometry.h"
 #include "../utils/mem.h"
+
+/*
+ * Create a geometry.
+ */
+static struct geometry_t *geometry_create(int type)
+{
+  struct geometry_t *geometry;
+
+  geometry = (struct geometry_t *) xmalloc(sizeof(struct geometry_t));
+  geometry->type = type;
+
+  return geometry;
+}
+
+/*
+ * Create a point.
+ */
+struct geometry_t *point_create(double x, double y)
+{
+  struct geometry_t *geometry;
+
+  geometry = geometry_create(GEOMETRY_POINT);
+  geometry->u.point.x = x;
+  geometry->u.point.y = y;
+
+  return geometry;
+}
+
+/*
+ * Create a line string.
+ */
+struct geometry_t *line_string_create(struct point_t *points, size_t nb_points)
+{
+  struct geometry_t *geometry;
+
+  if (!points || nb_points == 0)
+    return NULL;
+
+  geometry = geometry_create(GEOMETRY_LINE_STRING);
+  geometry->u.line_string.points = points;
+  geometry->u.line_string.nb_points = nb_points;
+
+  return geometry;
+}
+
+/*
+ * Create a polygon.
+ */
+struct geometry_t *polygon_create(struct ring_t *rings, size_t nb_rings)
+{
+  struct geometry_t *geometry;
+
+  if (!rings || nb_rings == 0)
+    return NULL;
+
+  geometry = geometry_create(GEOMETRY_POLYGON);
+  geometry->u.polygon.rings = rings;
+  geometry->u.polygon.nb_rings = nb_rings;
+
+  return geometry;
+}
+
+/*
+ * Create a multi point.
+ */
+struct geometry_t *multi_point_create(struct point_t *points, size_t nb_points)
+{
+  struct geometry_t *geometry;
+
+  if (!points || nb_points == 0)
+    return NULL;
+
+  geometry = geometry_create(GEOMETRY_MULTI_POINT);
+  geometry->u.multi_point.points = points;
+  geometry->u.multi_point.nb_points = nb_points;
+
+  return geometry;
+}
+
+/*
+ * Create a multi line string
+ */
+struct geometry_t *multi_line_string_create(struct line_string_t *line_strings, size_t nb_line_strings)
+{
+  struct geometry_t *geometry;
+
+  if (!line_strings || nb_line_strings == 0)
+    return NULL;
+
+  geometry = geometry_create(GEOMETRY_MULTI_LINE_STRING);
+  geometry->u.multi_line_string.line_strings = line_strings;
+  geometry->u.multi_line_string.nb_line_strings = nb_line_strings;
+
+  return geometry;
+}
+
+/*
+ * Create a multi polygon.
+ */
+struct geometry_t *multi_polygon_create(struct polygon_t *polygons, size_t nb_polygons)
+{
+  struct geometry_t *geometry;
+
+  if (!polygons || nb_polygons == 0)
+    return NULL;
+
+  geometry = geometry_create(GEOMETRY_MULTI_POLYGON);
+  geometry->u.multi_polygon.polygons = polygons;
+  geometry->u.multi_polygon.nb_polygons = nb_polygons;
+
+  return geometry;
+}
 
 /*
  * Free a multi point.

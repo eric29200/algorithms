@@ -37,7 +37,7 @@ struct geometry_t *line_string_create(struct point_t *points, size_t nb_points)
 {
   struct geometry_t *geometry;
 
-  if (!points || nb_points == 0)
+  if (!points || nb_points <= 1)
     return NULL;
 
   geometry = geometry_create(GEOMETRY_LINE_STRING);
@@ -113,6 +113,23 @@ struct geometry_t *multi_polygon_create(struct polygon_t *polygons, size_t nb_po
   geometry->u.multi_polygon.nb_polygons = nb_polygons;
 
   return geometry;
+}
+
+/*
+ * Create a linear ring.
+ */
+struct ring_t *ring_create(struct point_t *points, size_t nb_points)
+{
+  struct ring_t *ring;
+
+  if (!points || nb_points <= 1)
+    return NULL;
+
+  ring = (struct ring_t *) xmalloc(sizeof(struct ring_t));
+  ring->points = points;
+  ring->nb_points = nb_points;
+
+  return ring;
 }
 
 /*

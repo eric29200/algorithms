@@ -372,38 +372,15 @@ void geometry_free(struct geometry_t *geometry)
 }
 
 /*
- * Check if segments (p1 ; p2) and (p3 ; p4) intersect.
- */
-static int segment_intersect(struct point_t *p1, struct point_t *p2, struct point_t *p3, struct point_t *p4)
-{
-  double denom, ua, ub;
-
-  /* parallel lines */
-  denom = (p4->y - p3->y) * (p2->x - p1->x) - (p4->x - p3->x) * (p2->y - p1->y);
-  if (denom == 0.0)
-    return 0;
-
-  /* out of range */
-  ua = ((p4->x - p3->x) * (p1->y - p3->y) - (p4->y - p3->y) * (p1->x - p3->x)) / denom;
-  if (ua < 0.0 || ua > 1.0)
-    return 0;
-
-  /* out of range */
-  ub = ((p2->x - p1->x) * (p1->y - p3->y) - (p2->y - p1->y) * (p1->x - p3->x)) / denom;
-  if (ub < 0.0 || ub > 1.0)
-    return 0;
-
-  return 1;
-}
-
-/*
  * Check if polygon contains point p.
  */
 static int polygon_contains(struct geometry_t *polygon, struct point_t *p)
 {
   size_t i, j, nb_intersections;
+  struct point_t *p0, *p1;
   struct ring_t *ring;
-  struct point_t p0;
+  double slope;
+  int c1, c2;
 
   if (!polygon || !p)
     return 0;
@@ -413,16 +390,25 @@ static int polygon_contains(struct geometry_t *polygon, struct point_t *p)
    || p->y < polygon->envelope->points[0].y || p->y > polygon->envelope->points[2].y)
     return 0;
 
-  /* create ray from left to point */
-  p0.x = polygon->envelope->points[0].x - 1;
-  p0.y = p->y;
-
-  /* compute number of intersections with ray */
+  /* compute number of intersections with vertical ray */
   for (i = 0, nb_intersections = 0; i < polygon->u.polygon.nb_rings; i++) {
     ring = &polygon->u.polygon.rings[i];
 
-    for (j = 1; j < ring->nb_points; j++)
-      nb_intersections += segment_intersect(&p0, p, &ring->points[j - 1], &ring->points[j]);
+    for (j = 1; j < ring->nb_points; j++) {
+      p0 = &ring->points[j - 1];
+      p1 = &ring->points[j];
+
+      /* ray out of intersection */
+      c1 = p->x >= p0->x && p->x < p1->x;
+      c2 = p->x >= p1->x && p->x < p0->x;
+      if (!c1 && !c2)
+        continue;
+
+      /* check slope */
+      slope = (p1->y - p0->y) / (p1->x - p0->x);
+      if (p->y < (slope * (p->x - p0->x) + p0->y))
+        nb_intersections++;
+    }
   }
 
   /* polygon contains point if number of intersections is even */

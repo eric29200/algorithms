@@ -6,7 +6,7 @@
 #include "utils/mem.h"
 
 #define INPUT_FILE            "/home/eric/data.wkb"
-#define NB_TESTS              10000000
+#define NB_TESTS              10000
 
 /*
  * Read geometries.

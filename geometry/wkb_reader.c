@@ -252,6 +252,9 @@ struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len)
       goto err;
   }
 
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
+
   return geometry;
 err:
   geometry_free(geometry);

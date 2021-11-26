@@ -79,6 +79,7 @@ struct geometry_t {
     struct multi_line_string_t multi_line_string;
     struct multi_polygon_t multi_polygon;
   } u;
+  struct ring_t *envelope;
 };
 
 struct geometry_t *point_create(double x, double y);
@@ -89,6 +90,7 @@ struct geometry_t *multi_line_string_create(struct line_string_t *line_strings, 
 struct geometry_t *multi_polygon_create(struct polygon_t *polygons, size_t nb_polygons);
 struct ring_t *ring_create(struct point_t *points, size_t nb_points);
 void geometry_free(struct geometry_t *geometry);
+void geometry_compute_envelope(struct geometry_t *geometry);
 
 int geometry_contains(struct geometry_t *g1, struct geometry_t *g2);
 

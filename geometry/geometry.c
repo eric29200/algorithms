@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "geometry.h"
 #include "../utils/mem.h"
@@ -12,8 +13,91 @@ static struct geometry_t *geometry_create(int type)
 
   geometry = (struct geometry_t *) xmalloc(sizeof(struct geometry_t));
   geometry->type = type;
+  geometry->envelope = NULL;
 
   return geometry;
+}
+
+/*
+ * Get min/max x/y.
+ */
+static void points_min_max(struct point_t *points, size_t nb_points, struct point_t *point_min, struct point_t *point_max)
+{
+  size_t i;
+
+  for (i = 0; i < nb_points; i++) {
+    if (points[i].x < point_min->x)
+      point_min->x = points[i].x;
+
+    if (points[i].x > point_max->x)
+      point_max->x = points[i].x;
+
+    if (points[i].y < point_min->y)
+      point_min->y = points[i].y;
+
+    if (points[i].y > point_max->y)
+      point_max->y = points[i].y;
+  }
+}
+
+/*
+ * Compute geometry envelope.
+ */
+void geometry_compute_envelope(struct geometry_t *geometry)
+{
+  struct point_t min_point = { 180.0, 90.0 }, max_point = { -180.0, -90.0 };
+  struct line_string_t *line_string;
+  struct point_t *envelope_points;
+  struct polygon_t *polygon;
+  size_t i;
+
+  /* envelope already computed */
+  if (!geometry || geometry->envelope)
+    return;
+
+  switch (geometry->type) {
+    case GEOMETRY_POINT:
+      return;
+    case GEOMETRY_LINE_STRING:
+      points_min_max(geometry->u.line_string.points, geometry->u.line_string.nb_points, &min_point, &max_point);
+      break;
+    case GEOMETRY_POLYGON:
+      points_min_max(geometry->u.polygon.rings[0].points, geometry->u.polygon.rings[0].nb_points, &min_point, &max_point);
+      break;
+    case GEOMETRY_MULTI_POINT:
+      points_min_max(geometry->u.multi_point.points, geometry->u.multi_point.nb_points, &min_point, &max_point);
+      break;
+    case GEOMETRY_MULTI_LINE_STRING:
+      for (i = 0; i < geometry->u.multi_line_string.nb_line_strings; i++) {
+        line_string = &geometry->u.multi_line_string.line_strings[i];
+        points_min_max(line_string->points, line_string->nb_points, &min_point, &max_point);
+      }
+
+      break;
+    case GEOMETRY_MULTI_POLYGON:
+      for (i = 0; i < geometry->u.multi_polygon.nb_polygons; i++) {
+        polygon = &geometry->u.multi_polygon.polygons[i];
+        points_min_max(polygon->rings[0].points, polygon->rings[0].nb_points, &min_point, &max_point);
+      }
+
+      break;
+  }
+
+  /* set envelope */
+  envelope_points = (struct point_t *) xmalloc(sizeof(struct point_t) * 5);
+  envelope_points[0].x = min_point.x;
+  envelope_points[0].y = min_point.y;
+  envelope_points[1].x = min_point.x;
+  envelope_points[1].y = max_point.y;
+  envelope_points[2].x = max_point.x;
+  envelope_points[2].y = max_point.y;
+  envelope_points[3].x = max_point.x;
+  envelope_points[3].y = min_point.y;
+  envelope_points[4].x = min_point.x;
+  envelope_points[4].y = min_point.y;
+
+  /* create envelope */
+  geometry->envelope = ring_create(envelope_points, 5);
 }
 
 /*
@@ -44,6 +128,9 @@ struct geometry_t *line_string_create(struct point_t *points, size_t nb_points)
   geometry->u.line_string.points = points;
   geometry->u.line_string.nb_points = nb_points;
 
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
+
   return geometry;
 }
 
@@ -60,6 +147,9 @@ struct geometry_t *polygon_create(struct ring_t *rings, size_t nb_rings)
   geometry = geometry_create(GEOMETRY_POLYGON);
   geometry->u.polygon.rings = rings;
   geometry->u.polygon.nb_rings = nb_rings;
+
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
 
   return geometry;
 }
@@ -78,6 +168,9 @@ struct geometry_t *multi_point_create(struct point_t *points, size_t nb_points)
   geometry->u.multi_point.points = points;
   geometry->u.multi_point.nb_points = nb_points;
 
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
+
   return geometry;
 }
 
@@ -95,6 +188,9 @@ struct geometry_t *multi_line_string_create(struct line_string_t *line_strings, 
   geometry->u.multi_line_string.line_strings = line_strings;
   geometry->u.multi_line_string.nb_line_strings = nb_line_strings;
 
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
+
   return geometry;
 }
 
@@ -111,6 +207,9 @@ struct geometry_t *multi_polygon_create(struct polygon_t *polygons, size_t nb_po
   geometry = geometry_create(GEOMETRY_MULTI_POLYGON);
   geometry->u.multi_polygon.polygons = polygons;
   geometry->u.multi_polygon.nb_polygons = nb_polygons;
+
+  /* compute envelope */
+  geometry_compute_envelope(geometry);
 
   return geometry;
 }
@@ -241,6 +340,12 @@ void geometry_free(struct geometry_t *geometry)
       break;
   }
 
+  /* free envelope */
+  if (geometry->envelope) {
+    ring_free(geometry->envelope);
+    free(geometry->envelope);
+  }
+
   xfree(geometry);
 }
 
@@ -338,10 +443,16 @@ int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
   if (!g1 || !g2)
     return 0;
 
-  if (g1->type == GEOMETRY_POLYGON && g2->type == GEOMETRY_POINT)
+  if (g1->type == GEOMETRY_POLYGON && g2->type == GEOMETRY_POINT) {
     return polygon_contains(&g1->u.polygon, &g2->u.point);
-  else if (g1->type == GEOMETRY_MULTI_POLYGON && g2->type == GEOMETRY_POINT)
+  } else if (g1->type == GEOMETRY_MULTI_POLYGON && g2->type == GEOMETRY_POINT) {
+    /* check if envelope contains point */
+    if (g2->u.point.x < g1->envelope->points[0].x || g2->u.point.x > g1->envelope->points[2].x
+        || g2->u.point.y < g1->envelope->points[0].y || g2->u.point.y > g1->envelope->points[2].y)
+      return 0;
+
     return multi_polygon_contains(&g1->u.multi_polygon, &g2->u.point);
+  }
 
   return 0;
 }

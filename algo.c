@@ -6,15 +6,16 @@
 #include "utils/mem.h"
 
 #define INPUT_FILE            "/home/eric/data.wkb"
+#define NB_TESTS              1000
 
 /*
  * Main.
  */
 int main()
 {
-  struct list_t *geometries = NULL;
-  struct geometry_t *geometry;
-  size_t file_size, wkb_len;
+  struct list_t *geometries = NULL, *it;
+  struct geometry_t *geometry, *point;
+  size_t file_size, wkb_len, i;
   char *buf, *buf_ptr;
   FILE *fp;
 
@@ -52,6 +53,20 @@ int main()
     /* add geometry */
     geometries = list_append(geometries, geometry);
   }
+
+  /* create point */
+  point = point_create(-5.004, 48.198);
+
+  /* get geometries containing point */
+  for (i = 0; i < NB_TESTS; i++) {
+    for (it = geometries; it != NULL; it = it->next) {
+      geometry = (struct geometry_t *) it->data;
+      geometry_contains(geometry, point);
+    }
+  }
+
+  /* free point */
+  geometry_free(point);
 
 out:
   /* free geometries */

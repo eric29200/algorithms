@@ -436,23 +436,36 @@ static int multi_polygon_contains(struct multi_polygon_t *multi_polygon, struct 
 }
 
 /*
- * Check if g1 contains g2.
+ * Check if g1 contains point p.
  */
-int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
+int geometry_contains(struct geometry_t *g1, struct point_t *p)
 {
-  if (!g1 || !g2)
+  int ret;
+
+  if (!g1 || !p)
     return 0;
 
-  if (g1->type == GEOMETRY_POLYGON && g2->type == GEOMETRY_POINT) {
-    return polygon_contains(&g1->u.polygon, &g2->u.point);
-  } else if (g1->type == GEOMETRY_MULTI_POLYGON && g2->type == GEOMETRY_POINT) {
-    /* check if envelope contains point */
-    if (g2->u.point.x < g1->envelope->points[0].x || g2->u.point.x > g1->envelope->points[2].x
-        || g2->u.point.y < g1->envelope->points[0].y || g2->u.point.y > g1->envelope->points[2].y)
-      return 0;
+  switch (g1->type) {
+    case GEOMETRY_POLYGON:
+      /* check envelope first */
+      ret = p->x >= g1->envelope->points[0].x && p->x <= g1->envelope->points[2].x
+         && p->y >= g1->envelope->points[0].y && p->y <= g1->envelope->points[2].y;
 
-    return multi_polygon_contains(&g1->u.multi_polygon, &g2->u.point);
+      if (ret)
+        ret = polygon_contains(&g1->u.polygon, p);
+      break;
+    case GEOMETRY_MULTI_POLYGON:
+      /* check envelope first */
+      ret = p->x >= g1->envelope->points[0].x && p->x <= g1->envelope->points[2].x
+         && p->y >= g1->envelope->points[0].y && p->y <= g1->envelope->points[2].y;
+
+      if (ret)
+        ret = multi_polygon_contains(&g1->u.multi_polygon, p);
+      break;
+    default:
+      ret = 0;
+      break;
   }
 
-  return 0;
+  return ret;
 }

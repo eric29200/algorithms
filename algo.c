@@ -14,8 +14,9 @@
 int main()
 {
   struct list_t *geometries = NULL, *it;
-  struct geometry_t *geometry, *point;
+  struct geometry_t *geometry;
   size_t file_size, wkb_len, i;
+  struct point_t point;
   char *buf, *buf_ptr;
   FILE *fp;
 
@@ -55,18 +56,16 @@ int main()
   }
 
   /* create point */
-  point = point_create(-5.004, 48.198);
+  point.x = -5.004;
+  point.y = 48.198;
 
   /* get geometries containing point */
   for (i = 0; i < NB_TESTS; i++) {
     for (it = geometries; it != NULL; it = it->next) {
       geometry = (struct geometry_t *) it->data;
-      geometry_contains(geometry, point);
+      geometry_contains(geometry, &point);
     }
   }
-
-  /* free point */
-  geometry_free(point);
 
 out:
   /* free geometries */

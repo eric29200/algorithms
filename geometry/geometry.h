@@ -92,6 +92,6 @@ struct ring_t *ring_create(struct point_t *points, size_t nb_points);
 void geometry_free(struct geometry_t *geometry);
 void geometry_compute_envelope(struct geometry_t *geometry);
 
-int geometry_contains(struct geometry_t *g1, struct geometry_t *g2);
+int geometry_contains(struct geometry_t *g1, struct point_t *p);
 
 #endif

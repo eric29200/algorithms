@@ -86,35 +86,24 @@ static int wkb_read_polygon(void *wkb, size_t *wkb_len, struct polygon_t *polygo
  */
 static int wkb_read_multi_point(void *wkb, size_t *wkb_len, struct multi_point_t *multi_point, char endian)
 {
-  int geometry_type, ret;
-  char point_endian;
-  size_t i;
+  size_t i, len;
 
   /* read number of points */
   multi_point->nb_points = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
   *wkb_len += sizeof(int);
 
   /* allocate points */
-  multi_point->points = (struct point_t *) xmalloc(sizeof(struct point_t) * multi_point->nb_points);
+  multi_point->points = (struct geometry_t **) xmalloc(sizeof(struct geometry_t *) * multi_point->nb_points);
 
   /* read points */
   for (i = 0; i < multi_point->nb_points; i++) {
-    /* read byte order */
-    point_endian = *((char *) (wkb + *wkb_len));
-    *wkb_len += sizeof(char);
-
-    /* read geometry type */
-    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), point_endian);
-    *wkb_len += sizeof(int);
-
-    /* geometry must be a point */
-    if (geometry_type != GEOMETRY_POINT)
+    /* read polygon */
+    multi_point->points[i] = wkb_read_geometry(wkb + *wkb_len, &len);
+    if (!multi_point->points[i])
       return ERRWKB;
 
-    /* read point */
-    ret = wkb_read_points(wkb, wkb_len, &multi_point->points[i], 1);
-    if (ret != 0)
-      return ret;
+    /* update wkb len */
+    *wkb_len += len;
   }
 
   return 0;
@@ -126,36 +115,25 @@ static int wkb_read_multi_point(void *wkb, size_t *wkb_len, struct multi_point_t
 static int wkb_read_multi_line_string(void *wkb, size_t *wkb_len, struct multi_line_string_t *multi_line_string,
                                       char endian)
 {
-  int geometry_type, ret;
-  char ls_endian;
-  size_t i;
+  size_t i, len;
 
   /* read number of line strings */
   multi_line_string->nb_line_strings = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
   *wkb_len += sizeof(int);
 
   /* allocate line strings */
-  multi_line_string->line_strings = (struct line_string_t *) xmalloc(sizeof(struct line_string_t)
-                                                                     * multi_line_string->nb_line_strings);
+  multi_line_string->line_strings = (struct geometry_t **) xmalloc(sizeof(struct geometry_t *)
+                                                                   * multi_line_string->nb_line_strings);
 
   /* read line strings */
   for (i = 0; i < multi_line_string->nb_line_strings; i++) {
-    /* read byte order */
-    ls_endian = *((char *) (wkb + *wkb_len));
-    *wkb_len += sizeof(char);
-
-    /* read geometry type */
-    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), ls_endian);
-    *wkb_len += sizeof(int);
-
-    /* geometry must be a line string */
-    if (geometry_type != GEOMETRY_LINE_STRING)
+    /* read polygon */
+    multi_line_string->line_strings[i] = wkb_read_geometry(wkb + *wkb_len, &len);
+    if (!multi_line_string->line_strings[i])
       return ERRWKB;
 
-    /* read line string */
-    ret = wkb_read_line_string(wkb, wkb_len, &multi_line_string->line_strings[i], ls_endian);
-    if (ret != 0)
-      return ret;
+    /* update wkb len */
+    *wkb_len += len;
   }
 
   return 0;
@@ -166,35 +144,24 @@ static int wkb_read_multi_line_string(void *wkb, size_t *wkb_len, struct multi_l
  */
 static int wkb_read_multi_polygon(void *wkb, size_t *wkb_len, struct multi_polygon_t *multi_polygon, char endian)
 {
-  int geometry_type, ret;
-  char polygon_endian;
-  size_t i;
+  size_t i, len;
 
   /* read number of polygons */
   multi_polygon->nb_polygons = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), endian);
   *wkb_len += sizeof(int);
 
   /* allocate polygons */
-  multi_polygon->polygons = (struct polygon_t *) xmalloc(sizeof(struct polygon_t) * multi_polygon->nb_polygons);
+  multi_polygon->polygons = (struct geometry_t **) xmalloc(sizeof(struct geometry_t *) * multi_polygon->nb_polygons);
 
   /* read polygons */
   for (i = 0; i < multi_polygon->nb_polygons; i++) {
-    /* read byte order */
-    polygon_endian = *((char *) (wkb + *wkb_len));
-    *wkb_len += sizeof(char);
-
-    /* read geometry type */
-    geometry_type = WKB_ENDIAN(*((int *) (wkb + *wkb_len)), polygon_endian);
-    *wkb_len += sizeof(int);
-
-    /* geometry must be a polygon */
-    if (geometry_type != GEOMETRY_POLYGON)
+    /* read polygon */
+    multi_polygon->polygons[i] = wkb_read_geometry(wkb + *wkb_len, &len);
+    if (!multi_polygon->polygons[i])
       return ERRWKB;
 
-    /* read polygon */
-    ret = wkb_read_polygon(wkb, wkb_len, &multi_polygon->polygons[i], polygon_endian);
-    if (ret != 0)
-      return ret;
+    /* update wkb len */
+    *wkb_len += len;
   }
 
   return 0;

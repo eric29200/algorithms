@@ -220,7 +220,7 @@ struct geometry_t *wkb_read_geometry(void *wkb, size_t *wkb_len)
   }
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 err:

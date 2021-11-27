@@ -6,6 +6,7 @@
 #include "point.h"
 #include "line_string.h"
 #include "polygon.h"
+#include "envelope.h"
 
 #define GEOMETRY_POINT              1
 #define GEOMETRY_LINE_STRING        2
@@ -27,15 +28,11 @@ struct geometry_t {
     struct multi_line_string_t multi_line_string;
     struct multi_polygon_t multi_polygon;
   } u;
-  struct ring_t *envelope;
+  struct envelope_t *envelope;
 };
 
 struct geometry_t *geometry_create(int type);
 void geometry_free(struct geometry_t *geometry);
-void geometry_compute_envelope(struct geometry_t *geometry);
-
-int envelope_contains_point(struct ring_t *envelope, struct point_t *p);
-int envelope_contains(struct ring_t *envelope, struct geometry_t *g);
 
 int geometry_contains(struct geometry_t *g1, struct geometry_t *g2);
 int geometry_intersects(struct geometry_t *g1, struct geometry_t *g2);

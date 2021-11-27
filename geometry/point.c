@@ -31,7 +31,7 @@ struct geometry_t *multi_point_create(struct geometry_t **points, size_t nb_poin
   geometry->u.multi_point.nb_points = nb_points;
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 }

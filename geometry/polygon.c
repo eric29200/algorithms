@@ -35,7 +35,7 @@ struct geometry_t *polygon_create(struct ring_t *rings, size_t nb_rings)
   geometry->u.polygon.nb_rings = nb_rings;
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 }
@@ -55,7 +55,7 @@ struct geometry_t *multi_polygon_create(struct geometry_t **polygons, size_t nb_
   geometry->u.multi_polygon.nb_polygons = nb_polygons;
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 }

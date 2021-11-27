@@ -18,7 +18,7 @@ struct geometry_t *line_string_create(struct point_t *points, size_t nb_points)
   geometry->u.line_string.nb_points = nb_points;
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 }
@@ -38,7 +38,7 @@ struct geometry_t *multi_line_string_create(struct geometry_t **line_strings, si
   geometry->u.multi_line_string.nb_line_strings = nb_line_strings;
 
   /* compute envelope */
-  geometry_compute_envelope(geometry);
+  envelope_create(geometry);
 
   return geometry;
 }

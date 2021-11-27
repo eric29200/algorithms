@@ -74,3 +74,32 @@ void points_min_max(struct point_t *points, size_t nb_points, struct point_t *po
   }
 }
 
+/*
+ * Compute points orientation :
+ * - -1 : clockwise
+ * -  1 : counter clockwise
+ * -  0 : collinear
+ */
+int points_orientation(struct point_t *p1, struct point_t *p2, struct point_t *p3)
+{
+  double area = (p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x);
+
+  if (area < 0)
+    return -1;
+
+  if (area > 0)
+    return 1;
+
+  return 0;
+}
+
+/*
+ * Check if segment (p1 ; p2) intersects segment (p3 ; p4).
+ */
+int segment_intersects(struct point_t *p1, struct point_t *p2, struct point_t *p3, struct point_t *p4)
+{
+  if (points_orientation(p1, p2, p3) * points_orientation(p1, p2, p4) > 0)
+    return 0;
+
+  return points_orientation(p3, p4, p1) * points_orientation(p3, p4, p2) <= 0;
+}

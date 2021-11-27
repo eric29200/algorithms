@@ -33,6 +33,6 @@ struct geometry_t {
 struct geometry_t *geometry_create(int type);
 void geometry_free(struct geometry_t *geometry);
 void geometry_compute_envelope(struct geometry_t *geometry);
-int geometry_contains(struct geometry_t *g1, struct point_t *p);
+int geometry_contains(struct geometry_t *g1, struct geometry_t *g2);
 
 #endif

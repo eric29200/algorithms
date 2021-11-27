@@ -81,9 +81,8 @@ out:
  */
 int main()
 {
-  struct geometry_t **geometries;
+  struct geometry_t **geometries, *point;
   size_t nb_geometries, i, j;
-  struct point_t point;
 
   /* read geometries */
   geometries = geometries_read(&nb_geometries);
@@ -91,13 +90,15 @@ int main()
     return -1;
 
   /* create point */
-  point.x = -5.004;
-  point.y = 48.198;
+  point = point_create(-5.004, 48.198);
 
   /* get geometries containing point */
   for (i = 0; i < NB_TESTS; i++)
     for (j = 0; j < nb_geometries; j++)
-      geometry_contains(geometries[j], &point);
+      geometry_contains(geometries[j], point);
+
+  /* free point */
+  geometry_free(point);
 
   /* free geometries */
   if (geometries) {

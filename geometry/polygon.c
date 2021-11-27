@@ -106,16 +106,13 @@ void multi_polygon_free(struct multi_polygon_t *multi_polygon)
 /*
  * Check if polygon contains point p.
  */
-int polygon_contains(struct geometry_t *polygon, struct point_t *p)
+static int polygon_contains_point(struct geometry_t *polygon, struct point_t *p)
 {
   size_t i, j, nb_intersections;
   struct point_t *p0, *p1;
   struct ring_t *ring;
   double slope;
   int c1, c2;
-
-  if (!polygon || !p)
-    return 0;
 
   /* check envelope first */
   if (p->x < polygon->envelope->points[0].x || p->x > polygon->envelope->points[2].x
@@ -148,14 +145,22 @@ int polygon_contains(struct geometry_t *polygon, struct point_t *p)
 }
 
 /*
+ * Check if polygon contains g.
+ */
+int polygon_contains(struct geometry_t *polygon, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_POINT)
+    return polygon_contains_point(polygon, &g->u.point);
+
+  return 0;
+}
+
+/*
  * Check if multi polygon contains point p.
  */
-int multi_polygon_contains(struct geometry_t *multi_polygon, struct point_t *p)
+static int multi_polygon_contains_point(struct geometry_t *multi_polygon, struct point_t *p)
 {
   size_t i;
-
-  if (!multi_polygon || !p)
-    return 0;
 
   /* check envelope first */
   if (p->x < multi_polygon->envelope->points[0].x || p->x > multi_polygon->envelope->points[2].x
@@ -164,8 +169,19 @@ int multi_polygon_contains(struct geometry_t *multi_polygon, struct point_t *p)
 
   /* check every polygon */
   for (i = 0; i < multi_polygon->u.multi_polygon.nb_polygons; i++)
-    if (polygon_contains(multi_polygon->u.multi_polygon.polygons[i], p))
+    if (polygon_contains_point(multi_polygon->u.multi_polygon.polygons[i], p))
       return 1;
+
+  return 0;
+}
+
+/*
+ * Check if multi polygon contains g.
+ */
+int multi_polygon_contains(struct geometry_t *multi_polygon, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_POINT)
+    return multi_polygon_contains_point(multi_polygon, &g->u.point);
 
   return 0;
 }

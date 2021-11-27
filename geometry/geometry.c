@@ -133,26 +133,14 @@ void geometry_free(struct geometry_t *geometry)
 }
 
 /*
- * Check if g1 contains point p.
+ * Check if g1 contains g2.
  */
-int geometry_contains(struct geometry_t *g1, struct point_t *p)
+int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
 {
-  int ret;
+  if (g1->type == GEOMETRY_POLYGON)
+    return polygon_contains(g1, g2);
+  else if (g1->type == GEOMETRY_MULTI_POLYGON)
+    return multi_polygon_contains(g1, g2);
 
-  if (!g1 || !p)
-    return 0;
-
-  switch (g1->type) {
-    case GEOMETRY_POLYGON:
-      ret = polygon_contains(g1, p);
-      break;
-    case GEOMETRY_MULTI_POLYGON:
-      ret = multi_polygon_contains(g1, p);
-      break;
-    default:
-      ret = 0;
-      break;
-  }
-
-  return ret;
+  return 0;
 }

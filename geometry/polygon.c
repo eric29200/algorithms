@@ -142,10 +142,10 @@ static int polygon_contains_point(struct polygon_t *polygon, struct point_t *p)
 /*
  * Check if polygon contains g.
  */
-int polygon_contains(struct polygon_t *polygon, struct geometry_t *g)
+int polygon_contains(struct geometry_t *polygon, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_POINT)
-    return polygon_contains_point(polygon, &g->u.point);
+    return envelope_contains(polygon->envelope, g) && polygon_contains_point(&polygon->u.polygon, &g->u.point);
 
   return 0;
 }
@@ -172,10 +172,11 @@ static int multi_polygon_contains_point(struct multi_polygon_t *multi_polygon, s
 /*
  * Check if multi polygon contains g.
  */
-int multi_polygon_contains(struct multi_polygon_t *multi_polygon, struct geometry_t *g)
+int multi_polygon_contains(struct geometry_t *multi_polygon, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_POINT)
-    return multi_polygon_contains_point(multi_polygon, &g->u.point);
+    return envelope_contains(multi_polygon->envelope, g)
+        && multi_polygon_contains_point(&multi_polygon->u.multi_polygon, &g->u.point);
 
   return 0;
 }
@@ -229,12 +230,12 @@ static int polygon_intersects_multi_line_string(struct polygon_t *polygon, struc
 /*
  * Check if polygon intersects g.
  */
-int polygon_intersects(struct polygon_t *polygon, struct geometry_t *g)
+int polygon_intersects(struct geometry_t *polygon, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_LINE_STRING)
-    return polygon_intersects_line_string(polygon, &g->u.line_string);
+    return polygon_intersects_line_string(&polygon->u.polygon, &g->u.line_string);
   else if (g->type == GEOMETRY_MULTI_LINE_STRING)
-    return polygon_intersects_multi_line_string(polygon, &g->u.multi_line_string);
+    return polygon_intersects_multi_line_string(&polygon->u.polygon, &g->u.multi_line_string);
 
   return 0;
 }
@@ -274,12 +275,12 @@ static int multi_polygon_intersects_multi_line_string(struct multi_polygon_t *mu
 /*
  * Check if multi polygon intersects g.
  */
-int multi_polygon_intersects(struct multi_polygon_t *multi_polygon, struct geometry_t *g)
+int multi_polygon_intersects(struct geometry_t *multi_polygon, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_LINE_STRING)
-    return multi_polygon_intersects_line_string(multi_polygon, &g->u.line_string);
+    return multi_polygon_intersects_line_string(&multi_polygon->u.multi_polygon, &g->u.line_string);
   else if (g->type == GEOMETRY_MULTI_LINE_STRING)
-    return multi_polygon_intersects_multi_line_string(multi_polygon, &g->u.multi_line_string);
+    return multi_polygon_intersects_multi_line_string(&multi_polygon->u.multi_polygon, &g->u.multi_line_string);
 
   return 0;
 }

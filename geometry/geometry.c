@@ -61,9 +61,9 @@ void geometry_free(struct geometry_t *geometry)
 int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
 {
   if (g1->type == GEOMETRY_POLYGON)
-    return envelope_contains(g1->envelope, g2) && polygon_contains(&g1->u.polygon, g2);
+    return polygon_contains(g1, g2);
   else if (g1->type == GEOMETRY_MULTI_POLYGON)
-    return envelope_contains(g1->envelope, g2) && multi_polygon_contains(&g1->u.multi_polygon, g2);
+    return multi_polygon_contains(g1, g2);
 
   return 0;
 }
@@ -74,13 +74,13 @@ int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
 int geometry_intersects(struct geometry_t *g1, struct geometry_t *g2)
 {
   if (g1->type == GEOMETRY_LINE_STRING)
-    return line_string_intersects(&g1->u.line_string, g2);
+    return line_string_intersects(g1, g2);
   else if (g1->type == GEOMETRY_MULTI_LINE_STRING)
-    return multi_line_string_intersects(&g1->u.multi_line_string, g2);
+    return multi_line_string_intersects(g1, g2);
   else if (g1->type == GEOMETRY_POLYGON)
-    return envelope_contains(g1->envelope, g2) || polygon_intersects(&g1->u.polygon, g2);
+    return polygon_intersects(g1, g2);
   else if (g1->type == GEOMETRY_MULTI_POLYGON)
-    return envelope_contains(g1->envelope, g2) || multi_polygon_intersects(&g1->u.multi_polygon, g2);
+    return multi_polygon_intersects(g1, g2);
 
   return 0;
 }

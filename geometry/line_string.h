@@ -26,7 +26,7 @@ struct geometry_t *multi_line_string_create(struct geometry_t **line_strings, si
 void line_string_free(struct line_string_t *line_string);
 void multi_line_string_free(struct multi_line_string_t *multi_line_string);
 
-int line_string_intersects(struct line_string_t *line_string, struct geometry_t *g);
-int multi_line_string_intersects(struct multi_line_string_t *multi_line_string, struct geometry_t *g);
+int line_string_intersects(struct geometry_t *line_string, struct geometry_t *g);
+int multi_line_string_intersects(struct geometry_t *multi_line_string, struct geometry_t *g);
 
 #endif

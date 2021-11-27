@@ -133,12 +133,12 @@ static int multi_line_string_intersects_multi_line_string(struct multi_line_stri
 /*
  * Check if line string intersects g.
  */
-int line_string_intersects(struct line_string_t *line_string, struct geometry_t *g)
+int line_string_intersects(struct geometry_t *line_string, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_LINE_STRING)
-    return line_string_intersects_line_string(line_string, &g->u.line_string);
+    return line_string_intersects_line_string(&line_string->u.line_string, &g->u.line_string);
   else if (g->type == GEOMETRY_MULTI_LINE_STRING)
-    return multi_line_string_intersects_line_string(&g->u.multi_line_string, line_string);
+    return multi_line_string_intersects_line_string(&g->u.multi_line_string, &line_string->u.line_string);
 
   return 0;
 }
@@ -146,12 +146,13 @@ int line_string_intersects(struct line_string_t *line_string, struct geometry_t 
 /*
  * Check if multi line string intersects g.
  */
-int multi_line_string_intersects(struct multi_line_string_t *multi_line_string, struct geometry_t *g)
+int multi_line_string_intersects(struct geometry_t *multi_line_string, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_LINE_STRING)
-    return multi_line_string_intersects_line_string(multi_line_string, &g->u.line_string);
+    return multi_line_string_intersects_line_string(&multi_line_string->u.multi_line_string, &g->u.line_string);
   else if (g->type == GEOMETRY_MULTI_LINE_STRING)
-    return multi_line_string_intersects_multi_line_string(multi_line_string, &g->u.multi_line_string);
+    return multi_line_string_intersects_multi_line_string(&multi_line_string->u.multi_line_string,
+                                                          &g->u.multi_line_string);
 
   return 0;
 }

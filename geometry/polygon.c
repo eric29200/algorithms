@@ -179,3 +179,107 @@ int multi_polygon_contains(struct multi_polygon_t *multi_polygon, struct geometr
 
   return 0;
 }
+
+/*
+ * Check if polygon intersects line string ls.
+ */
+static int polygon_intersects_line_string(struct polygon_t *polygon, struct line_string_t *ls)
+{
+  struct point_t *p1, *p2;
+  struct ring_t *ring;
+  size_t i, j, k;
+
+  /* if polygon contains first point, polygon intersects line string */
+  if (polygon_contains_point(polygon, &ls->points[0]))
+    return 1;
+
+  /* for each ring */
+  for (i = 0; i < polygon->nb_rings; i++) {
+    ring = &polygon->rings[i];
+
+    /* for each segment */
+    for (j = 1; j < ring->nb_points; j++) {
+      p1 = &ring->points[j - 1];
+      p2 = &ring->points[j];
+
+      /* check each point of ls */
+      for (k = 1; k < ls->nb_points; k++)
+        if (segment_intersects(p1, p2, &ls->points[k - 1], &ls->points[k]))
+          return 1;
+    }
+  }
+
+  return 0;
+}
+
+/*
+ * Check if polygon intersects multi line string mls.
+ */
+static int polygon_intersects_multi_line_string(struct polygon_t *polygon, struct multi_line_string_t *mls)
+{
+  size_t i;
+
+  for (i = 0; i < mls->nb_line_strings; i++)
+    if (polygon_intersects_line_string(polygon, &mls->line_strings[i]->u.line_string))
+      return 1;
+
+  return 0;
+}
+
+/*
+ * Check if polygon intersects g.
+ */
+int polygon_intersects(struct polygon_t *polygon, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_LINE_STRING)
+    return polygon_intersects_line_string(polygon, &g->u.line_string);
+  else if (g->type == GEOMETRY_MULTI_LINE_STRING)
+    return polygon_intersects_multi_line_string(polygon, &g->u.multi_line_string);
+
+  return 0;
+}
+
+/*
+ * Check if multi polygon intersects line string ls.
+ */
+static int multi_polygon_intersects_line_string(struct multi_polygon_t *multi_polygon, struct line_string_t *ls)
+{
+  size_t i;
+
+  /* if multi polygon contains first point, polygon intersects line string */
+  if (multi_polygon_contains_point(multi_polygon, &ls->points[0]))
+    return 1;
+
+  /* check each polygon */
+  for (i = 0; i < multi_polygon->nb_polygons; i++)
+    if (polygon_intersects_line_string(&multi_polygon->polygons[i]->u.polygon, ls))
+      return 1;
+
+  return 0;
+}
+/*
+ * Check if polygon intersects multi line string mls.
+ */
+static int multi_polygon_intersects_multi_line_string(struct multi_polygon_t *multi_polygon,
+                                                      struct multi_line_string_t *mls)
+{
+  size_t i;
+
+  for (i = 0; i < multi_polygon->nb_polygons; i++)
+    if (polygon_intersects_multi_line_string(&multi_polygon->polygons[i]->u.polygon, mls))
+      return 1;
+
+  return 0;
+}
+/*
+ * Check if multi polygon intersects g.
+ */
+int multi_polygon_intersects(struct multi_polygon_t *multi_polygon, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_LINE_STRING)
+    return multi_polygon_intersects_line_string(multi_polygon, &g->u.line_string);
+  else if (g->type == GEOMETRY_MULTI_LINE_STRING)
+    return multi_polygon_intersects_multi_line_string(multi_polygon, &g->u.multi_line_string);
+
+  return 0;
+}

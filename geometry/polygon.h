@@ -39,4 +39,7 @@ void ring_free(struct ring_t *ring);
 int polygon_contains(struct polygon_t *polygon, struct geometry_t *g);
 int multi_polygon_contains(struct multi_polygon_t *multi_polygon, struct geometry_t *g);
 
+int polygon_intersects(struct polygon_t *polygon, struct geometry_t *g);
+int multi_polygon_intersects(struct multi_polygon_t *multi_polygon, struct geometry_t *g);
+
 #endif

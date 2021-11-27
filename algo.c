@@ -6,7 +6,7 @@
 #include "utils/mem.h"
 
 #define INPUT_FILE            "/home/eric/data.wkb"
-#define NB_TESTS              10000
+#define NB_TESTS              100
 
 /*
  * Read geometries.
@@ -81,7 +81,8 @@ out:
  */
 int main()
 {
-  struct geometry_t **geometries, *point;
+  struct geometry_t **geometries, *line_string;
+  struct point_t *points;
   size_t nb_geometries, i, j;
 
   /* read geometries */
@@ -89,16 +90,21 @@ int main()
   if (!geometries)
     return -1;
 
-  /* create point */
-  point = point_create(-5.004, 48.198);
+  /* create line string */
+  points = (struct point_t *) xmalloc(sizeof(struct point_t) * 2);
+  points[0].x = -5.004;
+  points[0].y = 48.198;
+  points[1].x = -6.004;
+  points[1].y = 49.198;
+  line_string = line_string_create(points, 2);
 
-  /* get geometries containing point */
+  /* get geometries intersecting line string */
   for (i = 0; i < NB_TESTS; i++)
     for (j = 0; j < nb_geometries; j++)
-      geometry_contains(geometries[j], point);
+      geometry_intersects(geometries[j], line_string);
 
-  /* free point */
-  geometry_free(point);
+  /* free line string */
+  geometry_free(line_string);
 
   /* free geometries */
   if (geometries) {

@@ -38,5 +38,6 @@ int envelope_contains_point(struct ring_t *envelope, struct point_t *p);
 int envelope_contains(struct ring_t *envelope, struct geometry_t *g);
 
 int geometry_contains(struct geometry_t *g1, struct geometry_t *g2);
+int geometry_intersects(struct geometry_t *g1, struct geometry_t *g2);
 
 #endif

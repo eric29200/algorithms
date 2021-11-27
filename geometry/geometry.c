@@ -164,3 +164,16 @@ int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
 
   return 0;
 }
+
+/*
+ * Check if g1 intersects g2.
+ */
+int geometry_intersects(struct geometry_t *g1, struct geometry_t *g2)
+{
+  if (g1->type == GEOMETRY_LINE_STRING)
+    return line_string_intersects(&g1->u.line_string, g2);
+  else if (g1->type == GEOMETRY_MULTI_LINE_STRING)
+    return multi_line_string_intersects(&g1->u.multi_line_string, g2);
+
+  return 0;
+}

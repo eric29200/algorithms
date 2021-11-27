@@ -70,3 +70,88 @@ void multi_line_string_free(struct multi_line_string_t *multi_line_string)
   xfree(multi_line_string->line_strings);
 }
 
+/*
+ * Check if line string ls1 intersects line string ls2.
+ */
+static int line_string_intersects_line_string(struct line_string_t *ls1, struct line_string_t *ls2)
+{
+  struct point_t *p1, *p2, *p3, *p4;
+  size_t i, j;
+
+  /* foreach ls1 points */
+  for (i = 1; i < ls1->nb_points; i++) {
+    p1 = &ls1->points[i - 1];
+    p2 = &ls1->points[i];
+
+    /* foreach ls2 points */
+    for (j = 1; j < ls2->nb_points; j++) {
+      p3 = &ls2->points[j - 1];
+      p4 = &ls2->points[j];
+
+      /* check inter section */
+      if (segment_intersects(p1, p2, p3, p4))
+        return 1;
+    }
+  }
+
+  return 0;
+}
+
+/*
+ * Check if multi line string mls intersects line string ls.
+ */
+static int multi_line_string_intersects_line_string(struct multi_line_string_t *mls, struct line_string_t *ls)
+{
+  size_t i;
+
+  /* foreach ls */
+  for (i = 0; i < mls->nb_line_strings; i++)
+    if (line_string_intersects_line_string(&mls->line_strings[i]->u.line_string, ls))
+      return 1;
+
+  return 0;
+}
+
+/*
+ * Check if multi line string mls1 intersects multi line string mls2.
+ */
+static int multi_line_string_intersects_multi_line_string(struct multi_line_string_t *mls1,
+                                                          struct multi_line_string_t *mls2)
+{
+  size_t i, j;
+
+  /* foreach ls */
+  for (i = 0; i < mls1->nb_line_strings; i++)
+    for (j = 0; j < mls2->nb_line_strings; j++)
+      if (line_string_intersects_line_string(&mls1->line_strings[i]->u.line_string,
+                                             &mls2->line_strings[j]->u.line_string))
+        return 1;
+
+  return 0;
+}
+
+/*
+ * Check if line string intersects g.
+ */
+int line_string_intersects(struct line_string_t *line_string, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_LINE_STRING)
+    return line_string_intersects_line_string(line_string, &g->u.line_string);
+  else if (g->type == GEOMETRY_MULTI_LINE_STRING)
+    return multi_line_string_intersects_line_string(&g->u.multi_line_string, line_string);
+
+  return 0;
+}
+
+/*
+ * Check if multi line string intersects g.
+ */
+int multi_line_string_intersects(struct multi_line_string_t *multi_line_string, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_LINE_STRING)
+    return multi_line_string_intersects_line_string(multi_line_string, &g->u.line_string);
+  else if (g->type == GEOMETRY_MULTI_LINE_STRING)
+    return multi_line_string_intersects_multi_line_string(multi_line_string, &g->u.multi_line_string);
+
+  return 0;
+}

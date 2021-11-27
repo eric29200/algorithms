@@ -76,6 +76,34 @@ int envelope_contains_point(struct envelope_t *envelope, struct point_t *p)
 }
 
 /*
+ * Check if envelope contains line string ls.
+ */
+int envelope_contains_line_string(struct envelope_t *envelope, struct line_string_t *ls)
+{
+  size_t i;
+
+  for (i = 0; i < ls->nb_points; i++)
+    if (!envelope_contains_point(envelope, &ls->points[i]))
+      return 0;
+
+  return 1;
+}
+
+/*
+ * Check if envelope contains multi line string mls.
+ */
+int envelope_contains_multi_line_string(struct envelope_t *envelope, struct multi_line_string_t *mls)
+{
+  size_t i;
+
+  for (i = 0; i < mls->nb_line_strings; i++)
+    if (!envelope_contains_line_string(envelope, &mls->line_strings[i]->u.line_string))
+      return 0;
+
+  return 1;
+}
+
+/*
  * Check if envelope contains g.
  */
 int envelope_contains(struct envelope_t *envelope, struct geometry_t *g)

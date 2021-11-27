@@ -133,14 +133,34 @@ void geometry_free(struct geometry_t *geometry)
 }
 
 /*
+ * Check if envelope contains point p.
+ */
+int envelope_contains_point(struct ring_t *envelope, struct point_t *p)
+{
+  return p->x >= envelope->points[0].x && p->y >= envelope->points[0].y
+      && p->x <= envelope->points[2].x && p->y <= envelope->points[2].y;
+}
+
+/*
+ * Check if envelope contains g.
+ */
+int envelope_contains(struct ring_t *envelope, struct geometry_t *g)
+{
+  if (g->type == GEOMETRY_POINT)
+    return envelope_contains_point(envelope, &g->u.point);
+
+  return 0;
+}
+
+/*
  * Check if g1 contains g2.
  */
 int geometry_contains(struct geometry_t *g1, struct geometry_t *g2)
 {
   if (g1->type == GEOMETRY_POLYGON)
-    return polygon_contains(g1, g2);
+    return envelope_contains(g1->envelope, g2) && polygon_contains(&g1->u.polygon, g2);
   else if (g1->type == GEOMETRY_MULTI_POLYGON)
-    return multi_polygon_contains(g1, g2);
+    return envelope_contains(g1->envelope, g2) && multi_polygon_contains(&g1->u.multi_polygon, g2);
 
   return 0;
 }

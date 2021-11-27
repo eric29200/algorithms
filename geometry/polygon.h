@@ -36,7 +36,7 @@ void polygon_free(struct polygon_t *polygon);
 void multi_polygon_free(struct multi_polygon_t *multi_polygon);
 void ring_free(struct ring_t *ring);
 
-int polygon_contains(struct geometry_t *polygon, struct geometry_t *g);
-int multi_polygon_contains(struct geometry_t *multi_polygon, struct geometry_t *g);
+int polygon_contains(struct polygon_t *polygon, struct geometry_t *g);
+int multi_polygon_contains(struct multi_polygon_t *multi_polygon, struct geometry_t *g);
 
 #endif

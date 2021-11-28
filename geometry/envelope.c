@@ -19,7 +19,8 @@ void envelope_create(struct geometry_t *geometry)
 
   switch (geometry->type) {
     case GEOMETRY_POINT:
-      return;
+      points_min_max(&geometry->u.point, 1, &min_point, &max_point);
+      break;
     case GEOMETRY_LINE_STRING:
       points_min_max(geometry->u.line_string.points, geometry->u.line_string.nb_points, &min_point, &max_point);
       break;
@@ -69,10 +70,10 @@ void envelope_create(struct geometry_t *geometry)
 /*
  * Check if envelope contains point p.
  */
-int envelope_contains_point(struct envelope_t *envelope, struct point_t *p)
+static int envelope_contains_coordinate(struct envelope_t *envelope, double x, double y)
 {
-  return p->x >= envelope->x_min && p->y >= envelope->y_min
-      && p->x <= envelope->x_max && p->y <= envelope->y_max;
+  return x >= envelope->x_min && y >= envelope->y_min
+      && x <= envelope->x_max && y <= envelope->y_max;
 }
 
 /*
@@ -81,7 +82,26 @@ int envelope_contains_point(struct envelope_t *envelope, struct point_t *p)
 int envelope_contains(struct envelope_t *envelope, struct geometry_t *g)
 {
   if (g->type == GEOMETRY_POINT)
-    return envelope_contains_point(envelope, &g->u.point);
+    return envelope_contains_coordinate(envelope, g->u.point.x, g->u.point.y);
 
   return 0;
+}
+
+/*
+ * Check if envelope1 intersects envelope2.
+ */
+static int envelope_intersects_envelope(struct envelope_t *envelope1, struct envelope_t *envelope2)
+{
+  return envelope_contains_coordinate(envelope1, envelope2->x_min, envelope2->y_min)
+      || envelope_contains_coordinate(envelope1, envelope2->x_min, envelope2->y_max)
+      || envelope_contains_coordinate(envelope1, envelope2->x_max, envelope2->y_max)
+      || envelope_contains_coordinate(envelope1, envelope2->x_max, envelope2->y_min);
+}
+
+/*
+ * Check if envelope intersects g.
+ */
+int envelope_intersects(struct envelope_t *envelope, struct geometry_t *g)
+{
+  return envelope_intersects_envelope(envelope, g->envelope);
 }

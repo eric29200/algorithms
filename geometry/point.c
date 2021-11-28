@@ -13,6 +13,9 @@ struct geometry_t *point_create(double x, double y)
   geometry->u.point.x = x;
   geometry->u.point.y = y;
 
+  /* compute envelope */
+  envelope_create(geometry);
+
   return geometry;
 }
 

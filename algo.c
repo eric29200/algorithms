@@ -6,7 +6,7 @@
 #include "utils/mem.h"
 
 #define INPUT_FILE            "/home/eric/data.wkb"
-#define NB_TESTS              100
+#define NB_TESTS              1
 
 /*
  * Read geometries.
@@ -101,7 +101,7 @@ int main()
   /* get geometries intersecting line string */
   for (i = 0; i < NB_TESTS; i++)
     for (j = 0; j < nb_geometries; j++)
-      geometry_intersects(geometries[j], line_string);
+      geometry_intersects(geometries[j], line_string)
 
   /* free line string */
   geometry_free(line_string);

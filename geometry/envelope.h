@@ -11,7 +11,7 @@ struct envelope_t {
 };
 
 void envelope_create(struct geometry_t *geometry);
-int envelope_contains_point(struct envelope_t *envelope, struct point_t *p);
 int envelope_contains(struct envelope_t *envelope, struct geometry_t *g);
+int envelope_intersects(struct envelope_t *envelope, struct geometry_t *g);
 
 #endif

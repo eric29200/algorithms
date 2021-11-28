@@ -186,9 +186,10 @@ static int polygon_intersects_line_string(struct polygon_t *polygon, struct line
   struct ring_t *ring;
   size_t i, j, k;
 
-  /* if polygon contains first point, polygon intersects line string */
-  if (polygon_contains_point(polygon, &ls->points[0]))
-    return 1;
+  /* if polygon contains a point, polygon intersects line string */
+  for (i = 0; i < ls->nb_points; i++)
+    if (polygon_contains_point(polygon, &ls->points[i]))
+      return 1;
 
   /* for each ring */
   for (i = 0; i < polygon->nb_rings; i++) {

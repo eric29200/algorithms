@@ -1,5 +1,5 @@
 /*
- * LZ77 algorithm = lossless data compression algorithm.
+ * LZ78 algorithm = lossless data compression algorithm.
  * This algorithm maintains a dictionnary (= a trie).
  * 1 - read each character
  * 2 - if the character is already in the dictionnary (start at root), go to next character and update tree node

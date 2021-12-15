@@ -1,118 +1,82 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#include "geometry/wkb_reader.h"
-#include "data_structures/list.h"
-#include "utils/mem.h"
-
-#define INPUT_FILE            "/home/eric/data.wkb"
-#define NB_TESTS              100000
+#include "compression/huffman.h"
+#include "compression/lz77.h"
+#include "compression/lz78.h"
 
 /*
- * Read geometries.
+ * Compression test.
  */
-struct geometry_t **geometries_read(size_t *nb_geometries)
+static void compression_test(const char *input_file, const char *compressed_file, const char *uncompressed_file,
+                             const char *method, int (*compression)(const char *, const char *),
+                             int (*uncompression)(const char *, const char *))
 {
-  struct list_t *geometries_list = NULL, *it;
-  struct geometry_t **geometries = NULL;
-  size_t file_size, wkb_len, len, i;
-  struct geometry_t *geometry;
-  char *buf;
-  FILE *fp;
+  off_t input_size, output_size;
+  struct stat statbuf;
+  clock_t start, end;
+  double t1, t2;
+  int err;
 
-  /* reset number of geometries */
-  *nb_geometries = 0;
+  /* get initial size */
+  err = stat(input_file, &statbuf);
+  if (err != 0)
+    return;
+  input_size = statbuf.st_size;
 
-  /* open input file */
-  fp = fopen(INPUT_FILE, "rb");
-  if (!fp) {
-    perror("fopen");
-    return NULL;
-  }
+  /* compression */
+  start = clock();
+  compression(input_file, compressed_file);
+  end = clock();
+  t1 = (double) (end - start) / CLOCKS_PER_SEC;
 
-  /* get file length */
-  fseek(fp, 0, SEEK_END);
-  file_size = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
+  /* uncompression */
+  start = clock();
+  uncompression(compressed_file, uncompressed_file);
+  end = clock();
+  t2 = (double) (end - start) / CLOCKS_PER_SEC;
 
-  /* allocate buffer */
-  buf = (char *) xmalloc(file_size + 1);
+  /* get output size */
+  err = stat(compressed_file, &statbuf);
+  if (err != 0)
+    return;
+  output_size = statbuf.st_size;
 
-  /* read all file in memory */
-  if (fread(buf, sizeof(char), file_size, fp) != file_size) {
-    perror("fread");
-    goto out;
-  }
-
-  /* end buffer */
-  buf[file_size] = 0;
-
-  /* read geometries */
-  for (len = 0, geometries_list = NULL; len < file_size; len += wkb_len, *nb_geometries += 1) {
-    /* read geometry */
-    geometry = wkb_read_geometry(buf + len, &wkb_len);
-    if (!geometry)
-      goto out;
-
-    /* add geometry */
-    geometries_list = list_append(geometries_list, geometry);
-  }
-
-  /* convert list to array */
-  geometries = (struct geometry_t **) xmalloc(sizeof(struct geometry_t *) * *nb_geometries);
-  for (i = 0, it = geometries_list; i < *nb_geometries; i++, it = it->next)
-    geometries[i] = (struct geometry_t *) it->data;
-
-out:
-  /* free geometries */
-  list_free(geometries_list);
-
-  /* free buffer */
-  free(buf);
-
-  /* close input file */
-  fclose(fp);
-
-  return geometries;
+  /* print statistics */
+  printf("******* %s\n", method);
+  printf("Ratio : %f\n", (double) input_size / (double) output_size);
+  printf("Compression time : %f\n", t1);
+  printf("Uncompression time : %f\n", t2);
 }
 
 /*
- * Main.
+ * Usage.
  */
-int main()
+static void usage(const char *name)
 {
-  struct geometry_t **geometries, *line_string;
-  struct point_t *points;
-  size_t nb_geometries, i, j;
+  fprintf(stderr, "%s input_file output_file new_file\n", name);
+}
 
-  /* read geometries */
-  geometries = geometries_read(&nb_geometries);
-  if (!geometries)
-    return -1;
-
-  /* create line string */
-  points = (struct point_t *) xmalloc(sizeof(struct point_t) * 2);
-  points[0].x = -5.004;
-  points[0].y = 48.198;
-  points[1].x = -6.004;
-  points[1].y = 49.198;
-  line_string = line_string_create(points, 2);
-
-  /* get geometries intersecting line string */
-  for (i = 0; i < NB_TESTS; i++)
-    for (j = 0; j < nb_geometries; j++)
-      geometry_intersects(geometries[j], line_string);
-
-  /* free line string */
-  geometry_free(line_string);
-
-  /* free geometries */
-  if (geometries) {
-    for (i = 0; i < nb_geometries; i++)
-      geometry_free(geometries[i]);
-
-    free(geometries);
+int main(int argc, char **argv)
+{
+  /* check arguments */
+  if (argc != 4) {
+    usage(argv[0]);
+    return 1;
   }
+
+  /* huffman */
+  compression_test(argv[1], argv[2], argv[3], "Huffman", huffman_encode, huffman_decode);
+
+  /* lz77 */
+  compression_test(argv[1], argv[2], argv[3], "LZ77", lz77_compress, lz77_uncompress);
+
+  /* lz78 */
+  compression_test(argv[1], argv[2], argv[3], "LZ78", lz78_compress, lz78_uncompress);
 
   return 0;
 }

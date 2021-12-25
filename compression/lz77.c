@@ -21,7 +21,7 @@
  */
 static inline int lz77_match(unsigned char *window, unsigned char *s, int len)
 {
-  register int i, j, k;
+  int i, j, k;
 
   for (i = 0; i < WINDOW_SIZE - len; i++) {
     for (j = 0, k = i; j < len; j++)

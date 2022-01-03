@@ -8,7 +8,6 @@
 #include "compression/huffman.h"
 #include "compression/lz77.h"
 #include "compression/lz78.h"
-#include "compression/rle.h"
 
 /*
  * Compression test.
@@ -78,9 +77,6 @@ int main(int argc, char **argv)
 
   /* lz78 */
   compression_test(argv[1], argv[2], argv[3], "LZ78", lz78_compress, lz78_uncompress);
-
-  /* rle */
-  compression_test(argv[1], argv[2], argv[3], "RLE", rle_compress, rle_uncompress);
 
   return 0;
 }

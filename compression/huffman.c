@@ -388,9 +388,9 @@ int huffman_encode(const char *input_file, const char *output_file)
   /* build huffman tree */
   root = huffman_tree(freq, NB_CHARACTERS);
   if (!root) {
-    return -1;
     fclose(fp_input);
     fclose(fp_output);
+    return -1;
   }
 
   /* build huffman codes */
